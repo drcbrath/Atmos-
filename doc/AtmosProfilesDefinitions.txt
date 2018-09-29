@@ -1,0 +1,67 @@
+// profile defined from:
+// (1) given Hic, Tic, Pic, Hk, Tgradk; derived Tk and Pk
+// (2) given Hic, Pic, Hk, Tk; derived TgradK, Pk, and Tic=T(Hic), i.e. Tic evaluated 
+// at Hic based on (Hk,Tk)
+//
+// variations from (1) & (2) are actually specific selections opr means of specifying 
+// initial conditions or profiles,
+// for example:
+// 
+// (1a) standard atmosphere (US, ISA, or COESA) specifies Hk, Tgradk based on  
+// measured data throughout the world and agreed by convention/conference/treaty 
+// plus initial condition at sea level,  standard day values, again by measure 
+// and convention:
+// Hic=0, Tic=Tsl, Pic=Psl, (Hk,Tgradk) std specified; Tk and Pk derived
+// 
+// (1b) like (1a) but with a different initial temperature, frequently/generally 
+// by the addition of given temperature deviation from std, dT, but retaining 
+// sea level std pressure:
+// Hic=0, Tic=Tsl+dT, Pic=Psl, (Hk,Tgradk) std specified; Tk and Pk derived
+// 
+// (1c) like (1a) but with an alternate sea level pressure to account for local 
+// variation; i.e. the Kollsman number entered in an altimeter, typically used 
+// to account for local variation due to weather and give a better estimate of 
+// altitude in the vicinity of the airport for takeoff, approach, and landing:
+// Hic=0, Tic=Tsl, Pic=Psl_alternative, (Hk,Tgradk) std specified; Tk and Pk 
+// derived
+// 
+// (1d) like (1a) but with a temperature deviation, dT, and an alternate sea 
+// level pressure, Pic=Psl_alternative:
+// Hic=0, Tic=Tsl+dT, Pic=Psl_alternative, (Hk,Tgradk) std specified; Tk and Pk 
+// derived
+// 
+// (1e) like (1d) but with given alternative initial temperature:
+//     Hic=0, Tic=Tsl_alternative, Pic=Psl_alternative, (Hk,Tgradk) std specified, 
+//     (Hk,Tgradk) std specified; Tk and Pk derived
+//   
+// (1f) like (1e) but with with alternative initial altitude and temperature and 
+// pressure at that altitude:
+// Hic=H_alternative, Tic=T_alternative, Pic=P_alternative, (Hk,Tgradk) std 
+// specified; Tk and Pk derived
+// 
+// (2a) sea level std temperature and pressure, std atmosphere temperature 
+// profile (note this is std atmos model, however, the US Std Atm document 
+// actually specified the temperature gradient not temperature profile; yet this 
+// seems to be the commonly presented form):
+//     Hic=0, Tic=Tsl, Pic=Psl, Tk & Pk given; Tgradk derived
+// 
+// (b) use std sea level pressure with an alternative temperature profile:
+//     Hic=0, Pic=Psk, (Hk,Tk) specified; Tic, Tgradk, and Pk derived
+// 
+// (2c) like (2a) but with a constant temperature deviation, dT, added to the 
+// entire profile:
+//     Hic=0, Tic=Tsl+dT, Pic=Psk; Tk=Tk_std+dT, Pk derived
+// 
+// (2d) like (2a) but with a custom/alternative temperature profile given:
+//     Hic=0, Pic=Psl, (Hk,Tk) custom given; Tic and Pk derived
+// 
+// (2e) like (2d) but with an alternative initial pressure:
+//     Hic=0, Pic=Psl_alternative, (Hk,Tk) custom given; Tic and Pk derived
+// 
+// This list may not be exhaustive. It suffices to code only the general cases  
+// (1) & (2). It may also be expedient to code the three convenient and common  
+// special cases:
+// (1) std atmos (1a)
+// (1b) std + constant temperature deviation, dT (common in analysis)
+// (1c) std with alternate sea level pressure, Pic = Psl_alternative (simulates  
+// use of Kollsman number in altimeter)
