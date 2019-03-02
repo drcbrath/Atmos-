@@ -15,7 +15,7 @@
 // arbtrarily set temperatures and violate the physics and math underlying the model
 // This class constructs the full temperature profile at construction/instantiation 
 // of an Atmos object variable which then stays with that object. This costs some 
-// extra computation at construction time, but less at use time; soa simulation
+// extra computation at construction time, but less at use time; so a simulation
 // that might make thousands of calls to evaluate the atmosphere properties 
 // should see an overall reduction of computation time.
 
@@ -166,7 +166,7 @@ inline void initializePRkDRk(double T0, double GMR, int n, double Hic, double Ti
 
 //------- Atm functions -------
 
-int AtmRatios(double hgp,  double T0, double GMR, std::vector<double> Hk, std::vector<double> Tk, std::vector<double> Tgradk, std::vector<double> PRk, std::vector<double> DRk,
+inline int AtmRatios(double hgp,  double T0, double GMR, std::vector<double> Hk, std::vector<double> Tk, std::vector<double> Tgradk, std::vector<double> PRk, std::vector<double> DRk,
    double &theta, double &sigma, double &delta, double &kappa)
 {
    int nLayers = Hk.size() - 1;
@@ -228,8 +228,8 @@ Atmos::Atmos(double dT, AtmosParameters AtmPrms = AtmosParameters_si)
    nStdLayers = StdDayHk.size() - 1;
    initializeProfile(T0, GMR, StdDayHk, StdDayTk, nStdLayers, StdDayTgradk, StdDayPRk, StdDayDRk);
 
-   Hk = StdDayHk_si;
-   Tk = StdDayTk_si;
+   Hk = StdDayHk;
+   Tk = StdDayTk;
    nLayers = Hk.size() - 1;
 
    for (int m = 0; m < Hk.size; m++)
@@ -255,8 +255,8 @@ Atmos::Atmos(double Hic, double Tic, double Pic, AtmosParameters AtmPrms = Atmos
    nStdLayers = StdDayHk.size() - 1;
    initializeProfile(T0, GMR, StdDayHk, StdDayTk, nStdLayers, StdDayTgradk, StdDayPRk, StdDayDRk);
 
-   Hk = StdDayHk_si;
-   Tgradk = StdDayTgradk_si;
+   Hk = StdDayHk;
+   Tgradk = StdDayTgradk;
 
    nLayers = Hk.size() - 1;
    Tk.resize(nLayers + 1);
@@ -409,7 +409,7 @@ int Atmos::at(double hgp_in)
 
 int Atmos::operator()(double hgp_in)
 {
-   return(at(hgp_in));
+   return(this->at(hgp_in));
 };
 
 // evaluate atmosphere properties, including alternative altitude definitions

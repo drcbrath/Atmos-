@@ -65,7 +65,7 @@ const double a0_si = 340.2686;         // (m/s), speed of sound at SL std temper
    // defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
 const std::vector<double> StdDayHk_si({ 0.0,  11000.0,  20000.0,  32000.0,  47000.0,  51000.0,  71000.0,  84852.0 });
 const std::vector<double> StdDayTk_si({ 288.15,   216.65,   216.65,   228.65,   270.65,   270.65,   214.65,   186.95 });
-const std::vector<double> StdDayTgradk_si({ 288.15,   216.65,   216.65,   228.65,   270.65,   270.65,   214.65,   186.95 });
+const std::vector<double> StdDayTgradk_si({ ??? });
 
 const std::vector<double> HotDayHk_si({ 0.0, 11000., 20000. });
 const std::vector<double> HotDayTk_si({ 308.15,269.65,237.65 });
@@ -114,7 +114,7 @@ const AtmosParameters AtmosParameters_us = { Re_us, H0_us, T0_us, rho0_us, P0_us
 // profile defined from:
 // (1) given Hic, Tic, Pic, Hk, Tgradk; derived Tk and Pk
 // (2) given Hic, Pic, Hk, Tk; derived TgradK, Pk, and Tic=T(Hic), i.e. Tic evaluated at Hic based on (Hk,Tk)
-// variations from (1) & (2) are actually specific selections opr means of specifying initial conditions or profiles
+// variations from (1) & (2) are actually specific selections or means of specifying initial conditions or profiles
 
 class Atmos
 {

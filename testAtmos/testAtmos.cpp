@@ -27,7 +27,7 @@ int writeTestLine(double Hgm, double Hgp, double Hpa, double Hda, double dT, dou
 
 int main()
 {
-   // 1. Validate basis of other functions, AtmSIRatios, on std day by comparison to independent authoritative refernce, US Std Atm
+   // 1. Validate basis of other functions, AtmSIRatios, on std day by comparison to independent authoritative reference, US Std Atm
    // 2. Verify & validate dT modified off std day by comparison to hand calculations in the two types of layers, linear thermal and isothermal. All other logic is unchanged, so dT=/=0 does not affect other aspects; hence demonstration at just two points suffices to validate dT=/=0 computation
    // 3. Validate dimensional function AtmSI results for T, rho, P, a, by comparison to US Std Atm std day. Compare off standard day to AtmSIRatios results multiplied by reference values. IN fact, this multiplication is all that AtmSI adds to AtmSIRatios---so it is somewhat trivial validation.
    // 4. The following eight functions use the above tested AtmSI for the property results, the added code to test is that which computes the various altitude types (geometric, pressure, density altitudes; Hgm, Hpa, Hda) corresponding to the geopotential (Hgp) and temperature. Using same Hgp input, the above results serve as the "should be" comparison data for the property (T,rho,P, ...) computation tests below. All eight functions do the same computations but with different altitude type and temperature type (dT constant or T at alt) as inputs, so given equivalent input they should give equivalent results. Geopotential altitude is the basic altitude type for the atmosphere models, so:
