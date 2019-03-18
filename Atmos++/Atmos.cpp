@@ -1,25 +1,102 @@
-// COESA (aka ISA) atmosphere model; standard and otherwise
+// Atmosphere properties model; standard and otherwise
 
 #include <limits>
 #include <math.h>
 #include <vector>
 #include "Atmos.h"
 
-// Atm functions
-// For simple use of the atmosphere model
-// These functions use the standard lapse rates and optionally
-// a constant temperature deviation, dT, applied to the profile.
-
 // Atmos class
-// This class provides more consistency with the math model; i.e. less able to 
-// arbtrarily set temperatures and violate the physics and math underlying the model
 // This class constructs the full temperature profile at construction/instantiation 
 // of an Atmos object variable which then stays with that object. This costs some 
 // extra computation at construction time, but less at use time; so a simulation
 // that might make thousands of calls to evaluate the atmosphere properties 
 // should see an overall reduction of computation time.
 
-// helpers
+//------- constants available externally -------
+
+// to derive from fundamentals, use these formulas instead of constants below
+//const double g0 = 9.90665;               // (m/s^2) standard referencence gravity
+//const double Ru = ?;                     // () universal gas constant
+//const double M = ?;                      // () dry air molal mass
+//const double gma = 1.4;                  // dry air ratio of specific heats
+//const double a0 = sqrt(gma*Ru / M*T0);   // (m/s), speed of sound at SL std temperature
+//const double GMR = g0*M / Rearth;        // (degK/m) combined gravity and gas constant of dry air on earth
+
+// SI units (default), use with atmos constructor to construct SI units based atmos object
+
+const double Re_si = 6369000;                    // (m) radius of the earth
+const double GMR_si = 0.034163195;               // (degK/m) combined gravity and gas constant of dry air on earth
+const double H0_si = 0.0;                        // (m) datum, sea level
+const double T0_si = 288.15;                     // (K) SL std temp
+const double rho0_si = 1.225;                    // (kg/m^3) SL std density
+const double P0_si = 101325;                     // (N/m^2) SL std pressure
+const double a0_si = 340.2686;                   // (m/s) speed of sound at SL std temperature
+const double visc0_si = 1.789380278077583e-05;   // (N/m^2) air dynamic viscosity at SL std
+const double S_si = 110.4;                       // (K) air Sutherland temperature for viscosity computation
+
+// defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
+const std::vector<double> StdDayHk_si({ 0.0,  11000.0,  20000.0,  32000.0,  47000.0,  51000.0,  71000.0,  84852.0 });
+const std::vector<double> StdDayTk_si({ 288.15,   216.65,   216.65,   228.65,   270.65,   270.65,   214.65,   186.95 });
+const std::vector<double> StdDayTgradk_si({ -0.0065000, 0.0000000, 0.0010000, 0.0028000, 0.0000000, -0.0028000, -0.0019997 - 0.0019997 });
+
+const std::vector<double> HotDayHk_si({ 0.0, 11000., 20000. });
+const std::vector<double> HotDayTk_si({ 308.15,269.65,237.65 });
+
+const std::vector<double> ColdDayHk_si({ 0.0, 11000., 20000. });
+const std::vector<double> ColdDayTk_si({ 308.15,269.65,237.65 });
+
+const std::vector<double> TropicalDayHk_si({ 0.0, 11000., 20000. });
+const std::vector<double> TropicalDayTk_si({ 308.15,269.65,237.65 });
+
+const std::vector<double> PolarDayHk_si({ 0.0, 11000., 20000. });
+const std::vector<double> PolarDayTk_si({ 308.15,269.65,237.65 });
+
+const AtmosParameters AtmosParameters_si = { Re_si, GMR_si, H0_si, T0_si, rho0_si, P0_si, a0_si, visc0_si, S_si, StdDayHk_si, StdDayTk_si };
+
+// US units, use with atmos constructor to construct US units based atmos object
+const double Re_us = Re_si / 0.3048;                                   // (m) radius of the earth
+const double GMR_us = GMR_si * (1.8*0.3048);                           // (degR/ft) combined gravity and gas constant of dry air on earth
+const double H0_us = 0.0;                                              // (ft) datum, sea level
+const double T0_us = T0_si * 1.8;                                      // (R), SL std temp
+const double rho0_us = rho0_si * (0.068521766*0.3048*0.3048*0.3048);   // (sl/ft^3), SL std density
+const double P0_us = P0_si * (0.3048*0.3048/4.4482216152605);          // (lbf/ft^2), SL std pressure
+const double a0_us = a0_si / 0.3048;                                   // (ft/s), speed of sound at SL std temperature
+const double visc0_us = visc0_si * (0.3048*0.3048/4.4482216152605);    // (N/m^2) air dynamic viscosity at SL std
+const double S_us = S_si*1.8;                                          // (R) air Sutherland temperature for viscosity computation
+
+   // defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
+const std::vector<double> StdDayHk_us({ 0.000, 3352.800, 6096.000, 9753.600, 14325.600, 15544.800, 21640.800, 25862.890 });
+const std::vector<double> StdDayTk_us({ 518.670, 389.970, 389.970, 411.570, 487.170, 487.170, 386.370, 336.510 });
+const std::vector<double> StdDayTgradk_us({ 1701.673, 1279.429, 1279.429, 1350.295, 1598.327, 1598.327, 1267.618, 1104.035 });
+
+const std::vector<double> HotDayHk_us({ 0.000, 3352.800, 6096.000 });
+const std::vector<double> HotDayTk_us({ 554.670, 485.370, 427.770 });
+
+const std::vector<double> ColdDayHk_us({ 0.000, 3352.800, 6096.000 });
+const std::vector<double> ColdDayTk_us({ 554.670, 485.370, 427.770 });
+
+const std::vector<double> TropicalDayHk_us({ 0.000, 3352.800, 6096.000 });
+const std::vector<double> TropicalDayTk_us({ 554.670, 485.370, 427.770 });
+
+const std::vector<double> PolarDayHk_us({ 0.000, 3352.800, 6096.000 });
+const std::vector<double> PolarDayTk_us({ 554.670, 485.370, 427.770 });
+
+const AtmosParameters AtmosParameters_us = { Re_us, GMR_us, H0_us, T0_us, rho0_us, P0_us, a0_us, visc0_us, S_us, StdDayHk_us, StdDayTk_us };
+
+// defined atmosphere models
+Atmos StdDay_si(AtmosParameters_si);
+Atmos HotDay_si(H0_si, P0_si, HotDayHk_si, HotDayTk_si, AtmosParameters_si);
+Atmos ColdDay_si(H0_si, P0_si, ColdDayHk_si, ColdDayTk_si, AtmosParameters_si);
+Atmos TropicalDay_si(H0_si, P0_si, TropicalDayHk_si, TropicalDayTk_si, AtmosParameters_si);
+Atmos PolarDay_si(H0_si, P0_si, PolarDayHk_si, PolarDayTk_si, AtmosParameters_si);
+
+Atmos StdDay_us(AtmosParameters_us);
+Atmos HotDay_us(H0_us, P0_us, HotDayHk_us, HotDayTk_us, AtmosParameters_us);
+Atmos ColdDay_us(H0_us, P0_us, ColdDayHk_us, ColdDayTk_us, AtmosParameters_us);
+Atmos TropicalDay_us(H0_us, P0_us, TropicalDayHk_us, TropicalDayTk_us, AtmosParameters_us);
+Atmos PolarDay_us(H0_us, P0_us, PolarDayHk_us, PolarDayTk_us, AtmosParameters_us);
+
+//------- helper functions -------
 
 // find n, layer number which contains hgp_in
 inline int findLayer(int nLayers, double hgp_in, std::vector<double> Hk)
@@ -37,16 +114,16 @@ inline int findLayer_PD(int nLayers, double pd, std::vector<double> PDk)
    int n;
    for (n = 1; n <= nLayers && pd < PDk[n]; n++);
    n--;   // decrement so n points to bottom of layer
-   if (n > nLayers) n = nLayers;   // max n is nLayers, if all loop tests fail, point is above table so must limit n here
+   if (n >= nLayers) n = nLayers-1;   // max n (index) is nLayers-1, if all loop tests fail, point is above table so must limit n here
 
    return(n);
 }
 // layer local pressure ratio (from bottom of layer at k up to altitude h)
 inline double pr(double h, double Hk, double T, double Tk, double Tgradk, double GMR)
 {
-   if (Tgradk != 0)
+   if (Tgradk != 0)                             // linear thermal layer
       return(pow((T / Tk), (-GMR / Tgradk)));
-   else
+   else                                         // isothermal layer
       return(exp(-GMR*(h - Hk) / Tk));
 }
 
@@ -71,10 +148,10 @@ inline double dh_sgm(double sgm, double sgmk, double T, double Tk, double Tgradk
    double dh;
 
    // local, layer density ratio from density ratio w.r.t. datum at h & bottom of layer k
-   double sr = sgm / sgmk;
+   double sr = sgm / sgmk * T / Tk;
 
    if (Tgradk != 0)
-      dh = (Tk / Tgradk)*(pow(sr, (1 / (1 + GMR / Tgradk))) - 1.0);
+      dh = Tk * (pow(sr, (-Tgradk / GMR)) - 1) / Tgradk;
    else
       dh = -(Tk / GMR)*log(sr);
 
@@ -100,8 +177,8 @@ inline double fHpa(double delta, std::vector<double> StdDayHk, std::vector<doubl
 inline double fHda(double sigma, std::vector<double> StdDayHk, std::vector<double> StdDayTk, std::vector<double> StdDayTgradk, std::vector<double> StdDayDRk, double T, double GMR)
 {
    double hda_out;
-   int n;
-   int nLayers = StdDayHk.size();
+   
+   int nLayers = StdDayHk.size()-1;
 
    // find layer n containing sigma in std day profile
    int n = findLayer_PD(nLayers, sigma, StdDayDRk);
@@ -122,12 +199,15 @@ inline void initializeProfile(double T0, double GMR, std::vector<double> Hk, std
 
    // should test gradient, if below a threshold, then truncate to zero to guard 
    // against round-off error inappropriately generating linear thermal layers
+   for (int k = 0; k < nLayers; k++)
+   {
+      Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
+   }
 
    PRk[0] = 1.0;
    DRk[0] = 1.0;
    for (int k = 0; k < nLayers; k++)
    {
-      Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
       PRk[k + 1] = PRk[k] * pr(Hk[k + 1], Hk[k], Tk[k + 1], Tk[k], Tgradk[k], GMR);
       DRk[k + 1] = PRk[k + 1] * T0 / Tk[k + 1];
    }
@@ -135,7 +215,7 @@ inline void initializeProfile(double T0, double GMR, std::vector<double> Hk, std
 }
 
 inline void initializePRkDRk(double T0, double GMR, int n, double Hic, double Tic, double Pic, std::vector<double> Hk, std::vector<double> Tk, std::vector<double> Tgradk,
-   std::vector<double> PRk, std::vector<double> DRk)
+   std::vector<double> &PRk, std::vector<double> &DRk)
 {
    int nLayers = Hk.size() - 1;
 
@@ -150,28 +230,26 @@ inline void initializePRkDRk(double T0, double GMR, int n, double Hic, double Ti
    }
 
    // for each n < k < nLayers+1, compute Tk & Pk above initial condition point
-   for (k = n; n <= nLayers; k++)
+   for (k = n; k < nLayers; k++)
    {
       PRk[k + 1] = PRk[k] * pr(Hk[k + 1], Hk[n], Tk[k + 1], Tk[n], Tgradk[n], GMR);
    }
 
    // construct density ratio profile
    DRk[0] = 1.0;
-   for (int k = 0; k <= nLayers; k++)
+   for (int k = 0; k < nLayers; k++)
    {
       DRk[k + 1] = PRk[k + 1] * T0 / Tk[k + 1];
    }
 
 }
 
-//------- Atm functions -------
-
 inline int AtmRatios(double hgp,  double T0, double GMR, std::vector<double> Hk, std::vector<double> Tk, std::vector<double> Tgradk, std::vector<double> PRk, std::vector<double> DRk,
    double &theta, double &sigma, double &delta, double &kappa)
 {
    int nLayers = Hk.size() - 1;
 
-   // find layer n
+   // find layer index, n
    int n = findLayer(nLayers, hgp, Hk);
 
    // compute properties from bottom of layer n up to given geopotential altitude hgp
@@ -184,30 +262,49 @@ inline int AtmRatios(double hgp,  double T0, double GMR, std::vector<double> Hk,
    return(0);
 };
 
+inline double AirViscRatio(double theta, double Sb0)
+{
+   // Dyanmic(absolute) viscosity of air as a function of temperature for moderate pressures,
+   // like atmospheric pressure, from Sutherland's law. This nondimensional form has been derived
+   // to ease use of alternatives units. Form and constants derived from 1976 US Standard Atmosphere,
+   // page 19 (https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770009539.pdf), which is 
+   // a widely used, primary atmosphere property model.
+   //
+   // Input
+   //    theta === temperature ratio to sea level standard conditions, T/T0
+   //    Sb0   === Sutherland temperature ratio by sea level std, S/T0
+   //
+   // Output
+   //    vr    === absolute viscosity ratio to sea level standard, visc0
+
+   double vr = pow(theta, 1.5) *(1 + Sb0) / (theta + Sb0);
+
+   return(vr);
+}
+
+
 //------- Atmos class implementation -------
 
-// construct standard atmosphere, SI units
-Atmos::Atmos(AtmosParameters AtmPrms = AtmosParameters_si)
+//Atmos::Atmos(AtmosParameters AtmPrms)
+Atmos::Atmos(AtmosParameters AtmPrms)
 {
    Re = AtmPrms.Re;               // planet radius
    GMR = AtmPrms.GMR;             // combined gravity and gas constant of planet atmosphere
-   T0 = AtmPrms.T0;               // temperature
-   rho0 = AtmPrms.rho0;           // density
-   P0 = AtmPrms.P0;               // pressure
-   a0 = AtmPrms.a0;               // sonic speed
+   T0 = AtmPrms.T0;               // temperature at sea level std
+   rho0 = AtmPrms.rho0;           // density at sea level std
+   P0 = AtmPrms.P0;               // pressure at sea level std
+   a0 = AtmPrms.a0;               // sonic speed at sea level std
+   visc0 = AtmPrms.visc0;         // air viscosity at sea level std
+   Sb0 = AtmPrms.S / T0;          // Sutherland temperature ratio at sea level std
+
    StdDayHk = AtmPrms.StdDayHk;
    StdDayTk = AtmPrms.StdDayTk;
    nStdLayers = StdDayHk.size() - 1;
    initializeProfile(T0, GMR, StdDayHk, StdDayTk, nStdLayers, StdDayTgradk, StdDayPRk, StdDayDRk);
 
-   Hk = StdDayHk_si;
-   Tk = StdDayTk_si;
+   Hk = StdDayHk;
+   Tk = StdDayTk;
    nLayers = Hk.size() - 1;
-
-   Tgradk.resize(nLayers);
-   PRk.resize(nLayers + 1);
-   DRk.resize(nLayers + 1);
-
    initializeProfile(T0, GMR, Hk, Tk, nLayers, Tgradk, PRk, DRk);
 
    this->at(0.0);   // initialize object to datum (i.e. sea level)
@@ -215,7 +312,7 @@ Atmos::Atmos(AtmosParameters AtmPrms = AtmosParameters_si)
 };
 
 // construct standard + dT deviation added to temperature profile vs altitude, SI units
-Atmos::Atmos(double dT, AtmosParameters AtmPrms = AtmosParameters_si)
+Atmos::Atmos(double dT, AtmosParameters AtmPrms)
 {
    Re = AtmPrms.Re;               // planet radius
    GMR = AtmPrms.GMR;             // combined gravity and gas constant of planet atmosphere
@@ -223,6 +320,8 @@ Atmos::Atmos(double dT, AtmosParameters AtmPrms = AtmosParameters_si)
    rho0 = AtmPrms.rho0;           // density
    P0 = AtmPrms.P0;               // pressure
    a0 = AtmPrms.a0;               // sonic speed
+   Sb0 = AtmPrms.S / T0;          // Sutherland temperature ratio
+
    StdDayHk = AtmPrms.StdDayHk;
    StdDayTk = AtmPrms.StdDayTk;
    nStdLayers = StdDayHk.size() - 1;
@@ -232,7 +331,7 @@ Atmos::Atmos(double dT, AtmosParameters AtmPrms = AtmosParameters_si)
    Tk = StdDayTk;
    nLayers = Hk.size() - 1;
 
-   for (int m = 0; m < Hk.size; m++)
+   for (int m = 0; m < Hk.size(); m++)
       Tk[m] += dT;
 
    initializeProfile(T0, GMR, Hk, Tk, nLayers, Tgradk, PRk, DRk);
@@ -242,14 +341,18 @@ Atmos::Atmos(double dT, AtmosParameters AtmPrms = AtmosParameters_si)
 };
 
 // construct using standard lapse rate profile used to derive temperature profile through (Hic,Tic,Pic), SI units
-Atmos::Atmos(double Hic, double Tic, double Pic, AtmosParameters AtmPrms = AtmosParameters_si)
+
+Atmos::Atmos(double Hic, double Tic, double Pic, AtmosParameters AtmPrms)
 {
    Re = AtmPrms.Re;               // planet radius
    GMR = AtmPrms.GMR;             // combined gravity and gas constant of planet atmosphere
-   T0 = AtmPrms.T0;               // temperature
-   rho0 = AtmPrms.rho0;           // density
-   P0 = AtmPrms.P0;               // pressure
-   a0 = AtmPrms.a0;               // sonic speed
+   T0 = AtmPrms.T0;               // temperature at sea level std
+   rho0 = AtmPrms.rho0;           // density at sea level std
+   P0 = AtmPrms.P0;               // pressure at sea level std
+   a0 = AtmPrms.a0;               // sonic speed at sea level std
+   visc0 = AtmPrms.visc0;         // air viscosity at sea level std
+   Sb0 = AtmPrms.S / T0;          // Sutherland temperature ratio at sea level std
+
    StdDayHk = AtmPrms.StdDayHk;
    StdDayTk = AtmPrms.StdDayTk;
    nStdLayers = StdDayHk.size() - 1;
@@ -263,26 +366,20 @@ Atmos::Atmos(double Hic, double Tic, double Pic, AtmosParameters AtmPrms = Atmos
    PRk.resize(nLayers + 1);
    DRk.resize(nLayers + 1);
 
-   // construct temperature profile
+   // construct temperature profile from gradient profile, (Hk,Tgradk)
    // find n such that Hk[n] < Hic < Hk[n + 1];
    int n;
-   for (n = 1; n <= nLayers && StdDayHk_si[n] < Hic; n++); n--;
-   if (n >= nLayers) n = nLayers - 1;   // ???
+   for (n = 1; n <= nLayers && Hk[n] < Hic; n++); n--;
 
    Tk[n] = Tic - Tgradk[n] * (Hic - Hk[n]);   // T at bottom of layer holding initial condition point
 
-   int k;
    // for each 0 <= k < n, compute Tk & Pk below initial condition point
-   for (k = n - 1; k >= 0; k--)
-   {
+   for (int k = n - 1; k >= 0; k--)
       Tk[k] = Tk[k + 1] - Tgradk[k] * (Hk[k + 1] - Hk[k]);
-   }
 
    // for each n < k < nLayers+1, compute Tk & Pk above initial condition point
-   for (k = n; n <= nLayers; k++)
-   {
+   for (int k = n; n <= nLayers; k++)
       Tk[k + 1] = Tk[k] + Tgradk[k] * (Hk[k + 1] - Hk[k]);
-   }
 
    initializePRkDRk(T0, GMR, n, Hic, Tic, Pic, Hk, Tk, Tgradk, PRk, DRk);
 
@@ -291,14 +388,17 @@ Atmos::Atmos(double Hic, double Tic, double Pic, AtmosParameters AtmPrms = Atmos
 };
 
 // custom from initial conditions Hic, Pic, breakpoints, and temperature profile, units determined by input
-Atmos::Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double> Tj, AtmosParameters AtmPrms = AtmosParameters_si)
+Atmos::Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double> Tj, AtmosParameters AtmPrms)
 {
    Re = AtmPrms.Re;               // planet radius
    GMR = AtmPrms.GMR;             // combined gravity and gas constant of planet atmosphere
-   T0 = AtmPrms.T0;               // temperature
-   rho0 = AtmPrms.rho0;           // density
-   P0 = AtmPrms.P0;               // pressure
-   a0 = AtmPrms.a0;               // sonic speed
+   T0 = AtmPrms.T0;               // temperature at sea level std
+   rho0 = AtmPrms.rho0;           // density at sea level std
+   P0 = AtmPrms.P0;               // pressure at sea level std
+   a0 = AtmPrms.a0;               // sonic speed at sea level std
+   visc0 = AtmPrms.visc0;         // air viscosity at sea level std
+   Sb0 = AtmPrms.S / T0;          // Sutherland temperature ratio at sea level std
+
    StdDayHk = AtmPrms.StdDayHk;
    StdDayTk = AtmPrms.StdDayTk;
    nStdLayers = StdDayHk.size() - 1;
@@ -309,20 +409,18 @@ Atmos::Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double>
 
    nLayers = Hk.size() - 1;
    Tk.resize(nLayers + 1);
+   Tgradk.resize(nLayers + 1);
    PRk.resize(nLayers + 1);
    DRk.resize(nLayers + 1);
    
 // construct temperature gradient profile
    for (int k = 0; k < nLayers; k++)
-   {
       Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
-   }
 
 // construct pressure ratio profile
    // find n such that Hk[n] < Hic < Hk[n + 1];
    int n;
    for (n = 1; n <= nLayers && StdDayHk_si[n] < Hic; n++); n--;
-   if (n >= nLayers) n = nLayers - 1;   // ???
 
    double Tic = Tk[n] + Tgradk[n] * (Hic - Hk[n]);   // temperature at initial condition point from given temperature profile
 
@@ -333,14 +431,17 @@ Atmos::Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double>
 };
 
 // custom from initial conditions (Hic, Tic, Pic), breakpoints, lapse rates, units determined by input
-Atmos::Atmos(double Hic, double Tic, double Pic, std::vector<double> Hj, std::vector<double> Tgradj, AtmosParameters AtmPrms = AtmosParameters_si)
+Atmos::Atmos(double Hic, double Tic, double Pic, std::vector<double> Hj, std::vector<double> Tgradj, AtmosParameters AtmPrms)
 {
    Re = AtmPrms.Re;               // planet radius
    GMR = AtmPrms.GMR;             // combined gravity and gas constant of planet atmosphere
-   T0 = AtmPrms.T0;               // temperature
-   rho0 = AtmPrms.rho0;           // density
-   P0 = AtmPrms.P0;               // pressure
-   a0 = AtmPrms.a0;               // sonic speed
+   T0 = AtmPrms.T0;               // temperature at sea level std
+   rho0 = AtmPrms.rho0;           // density at sea level std
+   P0 = AtmPrms.P0;               // pressure at sea level std
+   a0 = AtmPrms.a0;               // sonic speed at sea level std
+   visc0 = AtmPrms.visc0;         // air viscosity at sea level std
+   Sb0 = AtmPrms.S / T0;          // Sutherland temperature ratio at sea level std
+
    StdDayHk = AtmPrms.StdDayHk;
    StdDayTk = AtmPrms.StdDayTk;
    nStdLayers = StdDayHk.size() - 1;
@@ -358,22 +459,16 @@ Atmos::Atmos(double Hic, double Tic, double Pic, std::vector<double> Hj, std::ve
   // find n such that Hk[n] < Hic < Hk[n + 1];
    int n;
    for (n = 1; n <= nLayers && StdDayHk_si[n] < Hic; n++); n--;
-   if (n >= nLayers) n = nLayers - 1;   // ???
 
    Tk[n] = Tic - Tgradk[n] * (Hic - Hk[n]);   // T at bottom of layer holding initial condition point
 
-   int k;
    // for each 0 <= k < n, compute Tk & Pk below initial condition point
-   for (k = n - 1; k >= 0; k--)
-   {
+   for (int k = n - 1; k >= 0; k--)
       Tk[k] = Tk[k + 1] - Tgradk[k] * (Hk[k + 1] - Hk[k]);
-   }
 
    // for each n < k < nLayers+1, compute Tk & Pk above initial condition point
-   for (k = n; n <= nLayers; k++)
-   {
+   for (int k = n; n <= nLayers; k++)
       Tk[k + 1] = Tk[k] + Tgradk[k] * (Hk[k + 1] - Hk[k]);
-   }
 
    initializePRkDRk(T0, GMR, n, Hic, Tic, Pic, Hk, Tk, Tgradk, PRk, DRk);
 
@@ -390,17 +485,16 @@ Atmos::~Atmos() {};
 
 int Atmos::at(double hgp_in)
 {
-
    hgp = hgp_in;
 
-   int n = findLayer(nLayers, hgp, Hk);
+   AtmRatios(hgp_in, T0, GMR, Hk, Tk, Tgradk, PRk, DRk, Theta, Sigma, Delta, Kappa);
 
-   // compute properties from bottom of layer n up to given geopotential altitude hgp
-   TT = Tk[n] + Tgradk[n] * (hgp_in - Hk[n]);
-   Theta = TT / T0;
-   Delta = PRk[n] * pr(hgp_in, Hk[n], TT, Tk[n], Tgradk[n], GMR);
-   Sigma = Delta / Theta;
-   Kappa = sqrt(Theta);
+   TT = T0 * Theta;
+   Rho = rho0 * Sigma;
+   p = P0 * Delta;
+   Sonic = a0 * Kappa;
+
+   Visc = visc0*AirViscRatio(Theta, Sb0);
 
    hgm = hpa = hda = NAN;   // invalidate other altitudes
 
@@ -409,26 +503,37 @@ int Atmos::at(double hgp_in)
 
 int Atmos::operator()(double hgp_in)
 {
-   return(this->at(hgp_in));
+   hgp = hgp_in;
+
+   AtmRatios(hgp_in, T0, GMR, Hk, Tk, Tgradk, PRk, DRk, Theta, Sigma, Delta, Kappa);
+
+   TT = T0 * Theta;
+   Rho = rho0 * Sigma;
+   p = P0 * Delta;
+   Sonic = a0 * Kappa;
+
+   Visc = visc0 * AirViscRatio(Theta, Sb0);
+
+   hgm = hpa = hda = NAN;   // invalidate other altitudes
+
+   return(0);
 };
 
 // evaluate atmosphere properties, including alternative altitude definitions
 int Atmos::atHgp(double hgp_in)   // given geoptential altitude
 {
-
    this->at(hgp_in);
 
    hgm = hgp_in * Re / (Re - hgp_in);                                         // geometric altitude
    hpa = fHpa(Delta, StdDayHk, StdDayTk, StdDayTgradk, StdDayPRk, TT, GMR);   // pressure altitude
-   hda = fHda(Sigma, StdDayHk, StdDayTk, StdDayTgradk, StdDayPRk, TT, GMR);   // density altitude
+   hda = fHda(Sigma, StdDayHk, StdDayTk, StdDayTgradk, StdDayDRk, TT, GMR);   // density altitude
 
    return(0);
 };
 
 int Atmos::atHgm(double hgm_in)   // given geometric altitude
 {
-   hgm = hgm_in;
-   hgp = hgm*Re / (Re + hgm);                                                 // geopotential altitude
+   hgp = hgm_in*Re / (Re + hgm_in);                                           // geopotential altitude
 
    this->at(hgp);
 
@@ -489,7 +594,7 @@ double Atmos::Hgp(void)   // geoptential altitude
 
 double Atmos::Hgm(void)	// geometric altitude
 {
-   if (isnan(hgm))   // then hpa is not valid, does not correspond to current hgp
+   if (isnan(hgm))   // then hpm is not valid, does not correspond to current hgp
    {
       atHgp(hgp);   // update all altitudes by evaluating properties including all altitudes
    }

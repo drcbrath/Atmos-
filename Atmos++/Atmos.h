@@ -15,20 +15,10 @@
 // Furthermore, a completely custom temperature profile may be used.
 
 // Atmos class
-// This class provides consistency with the math model; i.e. less able to 
-// arbirarily set temperatures and violate the physics and math underlying the model.
 // This class constructs the full temperature profile at construction/instantiation 
 // of an Atmos object variable which then stays with that object. 
 
 #include <vector>
-
-// to derive from fundamentals, use these formulas instead of constants below
-//const double g0 = 9.90665;               // (m/s^2) standard referencence gravity
-//const double Ru = ?;                     // () universal gas constant
-//const double M = ?;                      // () dry air molal mass
-//const double gma = 1.4;                  // dry air ratio of specific heats
-//const double a0 = sqrt(gma*Ru / M*T0);   // (m/s), speed of sound at SL std temperature
-//const double GMR = g0*M / Rearth;        // (degK/m) combined gravity and gas constant of dry air on earth
 
 // to define and hold constants necessary for the construction and evaluation of
 // an atmos object, using a typedef & structure allows this to be passed to a
@@ -44,70 +34,57 @@ typedef struct AtmParms {
    const double rho0;   // SL std density
    const double P0;     // SL std pressure
    const double a0;     // speed of sound at SL std temperature
-   // std day profile (for use computing Hpa & Hda, without units specific code in the class nor its helper functions)
-   std::vector<double> StdDayHk;
-   std::vector<double> StdDayTk;
+   const double visc0;  // air dynamic (absolute) viscosity at SL std
+   const double S;      // air Sutherland temperature, for computation of viscosity
+   // std day profile (for computing Hpa & Hda, without units specific code in class nor helper functions)
+   const std::vector<double> StdDayHk;
+   const std::vector<double> StdDayTk;
 
 } AtmosParameters;
 
-//------- constants -------
+//------- constants available externally -------
 
 // SI units (default), use with atmos constructor to construct SI units based atmos object
 
-const double Re_si = 6369000;          // (m) radius of the earth
-const double GMR_si = 0.034163195;     // (degK/m) combined gravity and gas constant of dry air on earth
-const double H0_si = 0.0;              // (m) datum, sea level
-const double T0_si = 288.15;           // (K), SL std temp
-const double rho0_si = 1.225;          // (kg/m^3), SL std density
-const double P0_si = 101325;           // (N/m^2), SL std pressure
-const double a0_si = 340.2686;         // (m/s), speed of sound at SL std temperature
+extern const double Re_si;      // (m) radius of the earth
+extern const double GMR_si;     // (degK/m) combined gravity and gas constant of dry air on earth
+extern const double H0_si;      // (m) datum, sea level
+extern const double T0_si;      // (K) SL std temp
+extern const double rho0_si;    // (kg/m^3) SL std density
+extern const double P0_si;      // (N/m^2) SL std pressure
+extern const double a0_si;      // (m/s) speed of sound at SL std temperature
+extern const double visc0_si;   // (N/m^2) air dynamic viscosity at SL std
+extern const double S_si;       // (K) air Sutherland temperature for viscosity computation
 
-   // defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
-const std::vector<double> StdDayHk_si({ 0.0,  11000.0,  20000.0,  32000.0,  47000.0,  51000.0,  71000.0,  84852.0 });
-const std::vector<double> StdDayTk_si({ 288.15,   216.65,   216.65,   228.65,   270.65,   270.65,   214.65,   186.95 });
-const std::vector<double> StdDayTgradk_si({ ??? });
+// defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
+extern const std::vector<double> StdDayHk_si;
+extern const std::vector<double> StdDayTk_si;
+extern const std::vector<double> StdDayTgradk_si;
 
-const std::vector<double> HotDayHk_si({ 0.0, 11000., 20000. });
-const std::vector<double> HotDayTk_si({ 308.15,269.65,237.65 });
+extern const std::vector<double> HotDayHk_si;
+extern const std::vector<double> HotDayTk_si;
 
-const std::vector<double> ColdDayHk_si({ 0.0, 11000., 20000. });
-const std::vector<double> ColdDayTk_si({ 308.15,269.65,237.65 });
+extern const std::vector<double> ColdDayHk_si;
+extern const std::vector<double> ColdDayTk_si;
 
-const std::vector<double> TropicalDayHk_si({ 0.0, 11000., 20000. });
-const std::vector<double> TropicalDayTk_si({ 308.15,269.65,237.65 });
+extern const std::vector<double> TropicalDayHk_si;
+extern const std::vector<double> TropicalDayTk_si;
 
-const std::vector<double> PolarDayHk_si({ 0.0, 11000., 20000. });
-const std::vector<double> PolarDayTk_si({ 308.15,269.65,237.65 });
+extern const std::vector<double> PolarDayHk_si;
+extern const std::vector<double> PolarDayTk_si;
 
-const AtmosParameters AtmosParameters_si = { Re_si, H0_si, T0_si, rho0_si, P0_si, a0_si, GMR_si, StdDayHk_si, StdDayTk_si };
+extern const AtmosParameters AtmosParameters_si;
 
 // US units, use with atmos constructor to construct US units based atmos object
-const double Re_us = 20895669.;        // 6369000 / 0.3048;                             // (m) radius of the earth
-const double GMR_us = 0.01874329530;   // 0.034163195*(1.8*0.3048);                     // (degR/ft) combined gravity and gas constant of dry air on earth
-const double H0_us = 0.0;              //                                               // (ft) datum, sea level
-const double T0_us = 518.67;           // 288.15*1.8;                                   // (R), SL std temp
-const double rho0_us = 0.00237689;     // 1.225*(0.068521766*0.3048*0.3048*0.3048);     // (sl/ft^3), SL std density
-const double P0_us = 2116.2166;        // 101325 * (0.3048*0.3048 / 4.4482216152605);   // (lbf/ft^2), SL std pressure
-const double a0_us = 1116.36680;       // 340.2686 / 0.3048;                            // (ft/s), speed of sound at SL std temperature
-
-   // defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
-const std::vector<double> StdDayHk_us({ 0.000, 3352.800, 6096.000, 9753.600, 14325.600, 15544.800, 21640.800, 25862.890 });
-const std::vector<double> StdDayTk_us({ 518.670, 389.970, 389.970, 411.570, 487.170, 487.170, 386.370, 336.510 });
-const std::vector<double> StdDayTgradk_us({ 1701.673, 1279.429, 1279.429, 1350.295, 1598.327, 1598.327, 1267.618, 1104.035 });
-
-const std::vector<double> HotDayHk_us({ 0.000, 3352.800, 6096.000 });
-const std::vector<double> HotDayTk_us({ 554.670, 485.370, 427.770 });
-
-const std::vector<double> ColdDayHk_us({ 0.000, 3352.800, 6096.000 });
-const std::vector<double> ColdDayTk_us({ 554.670, 485.370, 427.770 });
-
-const std::vector<double> TropicalDayHk_us({ 0.000, 3352.800, 6096.000 });
-const std::vector<double> TropicalDayTk_us({ 554.670, 485.370, 427.770 });
-
-const std::vector<double> PolarDayHk_us({ 0.000, 3352.800, 6096.000 });
-const std::vector<double> PolarDayTk_us({ 554.670, 485.370, 427.770 });
-
-const AtmosParameters AtmosParameters_us = { Re_us, H0_us, T0_us, rho0_us, P0_us, a0_us, GMR_us, StdDayHk_us, StdDayTk_us };
+extern const double Re_us;      // (m) radius of the earth
+extern const double GMR_us;     // (degK/m) combined gravity and gas constant of dry air on earth
+extern const double H0_us;      // (m) datum, sea level
+extern const double T0_us;      // (K) SL std temp
+extern const double rho0_us;    // (kg/m^3) SL std density
+extern const double P0_us;      // (N/m^2) SL std pressure
+extern const double a0_us;      // (m/s) speed of sound at SL std temperature
+extern const double visc0_us;   // (N/m^2) air dynamic viscosity at SL std
+extern const double S_us;       // (K) air Sutherland temperature for viscosity computation
 
 //------- Atmos class definitions -------
 
@@ -119,11 +96,16 @@ const AtmosParameters AtmosParameters_us = { Re_us, H0_us, T0_us, rho0_us, P0_us
 class Atmos
 {
 public:
-   Atmos(AtmosParameters AtmPrms);                             // standard atmosphere
-   Atmos(double dT, AtmosParameters AtmPrms);                            // standard + dT deviation added to temperature profile vs altitude
-   Atmos(double Hic, double Tic, double Pic, AtmosParameters AtmPrms);   // standard lapse rate profile used to construct temperature profile and associated pressure breakpoints through initial condition point (Hic,Tic,Pic)
-   Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double> Tj, AtmosParameters AtmPrms);   // (2) custom temperature profile vs altitude used to construct profile with given initial condition Pic at Hic
-   Atmos(double Hic, double Tic, double Pic, std::vector<double> Hj, std::vector<double> Tgradj, AtmosParameters AtmPrms);   // (1) custom from breakpoints and lapse rates, and initial condition (Hic, Tic, Pic)
+   // note: for all constructors, last parameter, AtmPrms, is optional;
+   // if omitted, SI units AtmosParameters_si will be used. Alternatively,
+   // one may use AtmosParameters_us for US customary units, or assemble a
+   // custom AtmosParameter to suit.
+
+   Atmos(AtmosParameters AtmPrms = AtmosParameters_si);                             // standard atmosphere
+   Atmos(double dT, AtmosParameters AtmPrms = AtmosParameters_si);                            // standard + dT deviation added to temperature profile vs altitude
+   Atmos(double Hic, double Tic, double Pic, AtmosParameters AtmPrms = AtmosParameters_si);   // standard lapse rate profile used to construct temperature profile and associated pressure breakpoints through initial condition point (Hic,Tic,Pic)
+   Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double> Tj, AtmosParameters AtmPrms = AtmosParameters_si);   // (2) custom temperature profile vs altitude used to construct profile with given initial condition Pic at Hic
+   Atmos(double Hic, double Tic, double Pic, std::vector<double> Hj, std::vector<double> Tgradj, AtmosParameters AtmPrms = AtmosParameters_si);   // (1) custom temperature gradient profile (i.e. lapse rates) and initial condition (Hic, Tic, Pic)
 
 	~Atmos();
 
@@ -172,13 +154,15 @@ private:
    std::vector<double> StdDayDRk;
    int nStdLayers;
 
-   // atmosphere model parameters, values at datum, Hgp=0
+   // atmosphere model parameters, values at datum on standard day (typically sea level std)
 	double Re;     // planet radius
 	double GMR;    // combined gravity and gas constant of planet atmosphere
    double T0;     // temperature
    double rho0;   // density
    double P0;     // pressure
    double a0;     // sonic speed
+   double visc0;  // air viscosity
+   double Sb0;    // Sutherland temperature ratio by T0
 
 	// altitudes
 	double hgp;   // geopotential altitude
@@ -199,15 +183,18 @@ private:
 
 };
 
-// defined atmosphere models
-Atmos StdDay_si;
-Atmos HotDay_si(H0_si, P0_si, HotDayHk_si, HotDayTk_si);
-Atmos ColdDay_si(H0_si, P0_si, ColdDayHk_si, ColdDayTk_si);
-Atmos TropicalDay_si(H0_si, P0_si, TropicalDayHk_si, TropicalDayTk_si);
-Atmos PolarDay_si(H0_si, P0_si, PolarDayHk_si, PolarDayTk_si);
 
-Atmos StdDay_us;
-Atmos HotDay_us(H0_us, P0_us, HotDayHk_us, HotDayTk_us, AtmosParameters_us);
-Atmos ColdDay_us(H0_us, P0_us, ColdDayHk_us, ColdDayTk_us, AtmosParameters_us);
-Atmos TropicalDay_us(H0_us, P0_us, TropicalDayHk_us, TropicalDayTk_us, AtmosParameters_us);
-Atmos PolarDay_us(H0_us, P0_us, PolarDayHk_us, PolarDayTk_us, AtmosParameters_us);
+extern const AtmosParameters AtmosParameters_us;
+
+// defined atmosphere models
+extern Atmos StdDay_si;
+extern Atmos HotDay_si;
+extern Atmos ColdDay_si;
+extern Atmos TropicalDay_si;
+extern Atmos PolarDay_si;
+
+extern Atmos StdDay_us;
+extern Atmos HotDay_us;
+extern Atmos ColdDay_us;
+extern Atmos TropicalDay_us;
+extern Atmos PolarDay_us;

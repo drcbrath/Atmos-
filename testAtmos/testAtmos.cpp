@@ -1,25 +1,28 @@
-// testAtmos.cpp : Defines the entry point for the console application.
+// testAtmos.cpp : Test Atmos++ library, Atmos class
 //
+// (1) test constructors and atmosphere property computation over full domain of altitudes
+// (2) then test alternative altitude computations
+// (3) test method operator(), should be the same as method at(Hgp), and at(Hgp) method is used by the other at methods: atHgp, atHgm, ... so at(HgP) will       have been tested sufficiently by now
 
 #include "stdafx.h"
 #include <vector>
 #include "Atmos.h"
 
-int writeTestLine(double Hgm, double Hgp, double Hpa, double Hda, double dT, double T, double rho, double P, double sonic, double theta, double sigma, double delta, double sonicratio)
+int writeTestLine(double Hgm, double Hgp, double Hpa, double Hda, double T, double rho, double P, double sonic, double theta, double sigma, double delta, double sonicratio, double visc)
 {
-   std::cout << std::scientific << std::setprecision(6) << std::setw(13) << Hgm
-      << std::setprecision(6) << std::setw(14) << Hgp
-      << std::setprecision(6) << std::setw(14) << Hpa
-      << std::setprecision(6) << std::setw(14) << Hda
-      << std::setprecision(6) << std::setw(14) << dT
-      << std::setprecision(6) << std::setw(14) << T
-      << std::setprecision(6) << std::setw(14) << rho
-      << std::setprecision(6) << std::setw(14) << P
-      << std::setprecision(6) << std::setw(14) << sonic
-      << std::setprecision(6) << std::setw(14) << theta
-      << std::setprecision(6) << std::setw(14) << sigma
-      << std::setprecision(6) << std::setw(14) << delta
-      << std::setprecision(6) << std::setw(14) << sonicratio
+   std::cout << std::fixed << std::setw(7) << std::setprecision(1) << Hgm
+      << " " << std::fixed << std::setw(7) << std::setprecision(1) << Hgp
+      << " " << std::fixed << std::setw(7) << std::setprecision(1) << Hpa
+      << " " << std::fixed << std::setw(7) << std::setprecision(1) << Hda
+      << " " << std::fixed << std::setw(7) << std::setprecision(3) << T
+      << " " << std::scientific << std::setprecision(6) << std::setw(13) << rho
+      << " " << std::scientific << std::setprecision(6) << std::setw(13) << P
+      << " " << std::fixed << std::setw(7) << std::setprecision(2) << sonic
+      << " " << std::scientific << std::setw(13) << std::setprecision(6) << theta
+      << " " << std::scientific << std::setw(13) << std::setprecision(6) << sigma
+      << " " << std::scientific << std::setw(13) << std::setprecision(6) << delta
+      << " " << std::scientific << std::setw(13) << std::setprecision(6) << sonicratio
+      << " " << std::scientific << std::setw(13) << std::setprecision(6) << visc
       << std::endl;
 
    return(0);
@@ -27,446 +30,121 @@ int writeTestLine(double Hgm, double Hgp, double Hpa, double Hda, double dT, dou
 
 int main()
 {
-   // 1. Validate basis of other functions, AtmSIRatios, on std day by comparison to independent authoritative reference, US Std Atm
-   // 2. Verify & validate dT modified off std day by comparison to hand calculations in the two types of layers, linear thermal and isothermal. All other logic is unchanged, so dT=/=0 does not affect other aspects; hence demonstration at just two points suffices to validate dT=/=0 computation
-   // 3. Validate dimensional function AtmSI results for T, rho, P, a, by comparison to US Std Atm std day. Compare off standard day to AtmSIRatios results multiplied by reference values. IN fact, this multiplication is all that AtmSI adds to AtmSIRatios---so it is somewhat trivial validation.
-   // 4. The following eight functions use the above tested AtmSI for the property results, the added code to test is that which computes the various altitude types (geometric, pressure, density altitudes; Hgm, Hpa, Hda) corresponding to the geopotential (Hgp) and temperature. Using same Hgp input, the above results serve as the "should be" comparison data for the property (T,rho,P, ...) computation tests below. All eight functions do the same computations but with different altitude type and temperature type (dT constant or T at alt) as inputs, so given equivalent input they should give equivalent results. Geopotential altitude is the basic altitude type for the atmosphere models, so:
-      // 4.1 Test AtmSI_HgpdT. Compare altitudes Hgm, Hpa, Hda to hand calculations (or other authoritative or carefully verified source). Once proven these outputs become the "should be" results for the remaining seven function tests.
-      // Now, the altitude results Hgm, Hpa, Hda output from AtmSI_HgpdT are saved for use as input to the remaining seven functions, and the temperature is also saved for use as input to those functions with T input rather that dT (i.e. AtmSI_H??T())---these constitute the equivalent input, since they correspond to the Hgp and T used in the first tests.
-      // 4.2 Test AtmSI_HgpT using T output above in (4.1), compare to (4.1)
-      // 4.3 Test AtmSI_HgmdT using Hgm output above in (4.1), compare to (4.1)
-      // 4.4 Test AtmSI_HgmT using Hgm and T output above in (4.1), compare to (4.1)
-      // 4.5 Test AtmSI_HpadT using Hpa output above in (4.1), compare to (4.1)
-      // 4.6 Test AtmSI_HpaT using Hpa and T output above in (4.1), compare to (4.1)
-      // 4.7 Test AtmSI_HdadT using Hda output above in (4.1), compare to (4.1)
-      // 4.8 Test AtmSI_HdaT using Hda and T output above in (4.1), compare to (4.1)
-   
-   // test point inputs
-   double dTcold = -20;
-   double dTstd = 0;
-   double dThot = 20;
-
-   // std, hot, cold
-   std::vector<double> dTs = { 0.0, 20.0, -20.0};
-
    // test altitudes
       // test at: altitudes below table, at all breakpoints, between all breakpoints, above table
-   std::vector<double> Hgp_in = { -305.0, 0.0,  5500.0, 11000.0, 15500.0,  20000.0, 26000.0, 32000.0, 39500.0, 47000.0, 49000.0, 51000.0, 61000.0, 71000.0, 77927.0, 84852.0, 90000.0 };
+   std::vector<double> Hgp_in = { -100, 0.0, 5500, 11000.0, 15500, 20000.0, 26000, 32000.0, 39500, 47000.0, 49000, 51000.0, 61000, 71000.0, 80000, 84852.0, 90000 };
    std::vector<double> Hgm_in(Hgp_in.size());
    std::vector<double> Hpa_in(Hgp_in.size());
    std::vector<double> Hda_in(Hgp_in.size());
    std::vector<double> T_in(Hgp_in.size());
 
+   // test initial conditions
+   double Hic, Tic, Pic;
+   // test dT offset
+   double dT = 30.0;
+
+   // test profiles
+   std::vector<double> Hj;
+   std::vector<double> Tj;
+   std::vector<double> Tgradj;
+
    // test results
-   double Hpa, Hda, dT_out, T, rho, P, a, theta, sigma, delta, kappa;
    std::vector<double> Hgp_out(Hgp_in.size());
    std::vector<double> Hgm_out(Hgp_in.size());
    std::vector<double> Hpa_out(Hgp_in.size());
    std::vector<double> Hda_out(Hgp_in.size());
    std::vector<double> T_out(Hgp_in.size());
 
-//------- tests -------
+   
+   // SI
+   // (1) standard atmosphere, test omitting AtmPrms, should generate std day object and results
+   Atmos Atmos1(AtmosParameters_si);   // standard atmosphere, SI units
 
-// (1) & (2) validate AtmSIRatios
+   // point tests
+   // troposphere
+   Atmos1(5500.0); std::cout << "Atmos1() --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.at(5500.0); std::cout << "Atmos1.at --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHgp(5500.0); std::cout << "Atmos1.atHgp --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHgm(5500.0); std::cout << "Atmos1.atHgm --- Hgm, P, rho:" << Atmos1.Hgm() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHpa(5500.0); std::cout << "Atmos1.atHpa --- Hpa, P, rho:" << Atmos1.Hpa() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHda(5500); std::cout << "Atmos1.atHda --- Hda, P, rho:" << Atmos1.Hda() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   // stratosphere
+   Atmos1(15500.0); std::cout << "Atmos1() --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.at(15500.0); std::cout << "Atmos1.at --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHgp(15500.0); std::cout << "Atmos1.atHgp --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHgm(15500.0); std::cout << "Atmos1.atHgm --- Hgm, P, rho:" << Atmos1.Hgm() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHpa(13931.2); std::cout << "Atmos1.atHpa --- Hpa, P, rho:" << Atmos1.Hpa() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHda(15500.0); std::cout << "Atmos1.atHda --- Hda, P, rho:" << Atmos1.Hda() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
 
-   for (int m = 0; m < dTs.size(); m++)
+   // full range tests
+
+   std::cout << "Atmosphere Properties Model Test Data-- - Validated against \"US Standard Atmosphere, 1976\"" << std::endl << std::endl << std::endl;
+   std::cout << "(1) Comparison of : std day, evaluated at test altitudes" << std::endl;
+   std::cout << "    Hgm     Hgp     Hpa     Hda       T           rho             P       a         theta         sigma         delta         kappa          visc" << std::endl;
+   std::cout << "    (m)     (m)     (m)     (m)     (K)      (kg/m^3)       (N/m^2)   (m/s)           (1)           (1)           (1)           (1)     (N*s/m^2)" << std::endl;
+
+   for (size_t i = 0; i < Hgp_in.size(); i++)
    {
-      std::cout << "AtmSIRatios(Hgp,dT=" << dTs[m] << ")" << std::endl;
-      std::cout << "        Hgp(m)          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int j = 0; j <= Hgp_in.size(); j++)
-      {
-         AtmSIRatios(Hgp_in[m], dTstd, theta, sigma, delta, kappa);
-         for (int m = 0; m < Hgp_in.size(); m++)
-         {
-            AtmSIRatios(Hgp_in[m], dTs[m], theta, sigma, delta, kappa);
-            std::cout << std::scientific << std::setprecision(6) << std::setw(14) << Hgp_in[m]
-               << std::setprecision(6) << std::setw(14) << theta
-               << std::setprecision(6) << std::setw(14) << sigma
-               << std::setprecision(6) << std::setw(14) << delta
-               << std::setprecision(6) << std::setw(14) << kappa
-               << std::endl;
-         }
-         std::cout << std::endl << std::endl;
-      }
+      Atmos1.atHgp(Hgp_in[i]);   // compute all properties, including alternate altitude definitions, at test point
+      writeTestLine(Atmos1.Hgm(), Atmos1.Hgp(), Atmos1.Hpa(), Atmos1.Hda(), Atmos1.T(), Atmos1.rho(), Atmos1.P(), Atmos1.a(), Atmos1.theta(), Atmos1.sigma(), Atmos1.delta(), Atmos1.kappa(), Atmos1.visc());
    }
 
-// (3) validate AtmSI
-// calls AtmSIRatio (tested above), results differ only by multiplication by reference values, so it would  suffice to validate only at std day conditions, but other dTs are also computed to test coverage of inputs
+   // (2) dT offset, use dT from case (3) of test data, should match results of test data
+   Atmos Atmos2(dT, AtmosParameters_si);   // standard + dT deviation added to temperature profile vs altitude
+   
+   // point tests
+   // troposphere
+   Atmos2(5500.0); std::cout << "Atmos2() --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.at(5500.0); std::cout << "Atmos2.at --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHgp(5500.0); std::cout << "Atmos2.atHgp --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHgm(5500.0); std::cout << "Atmos2.atHgm --- Hgm, P, rho:" << Atmos2.Hgm() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHpa(4981.4); std::cout << "Atmos2.atHpa --- Hpa, P, rho:" << Atmos2.Hpa() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHda(5125.0); std::cout << "Atmos2.atHda --- Hda, P, rho:" << Atmos2.Hda() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   // stratosphere
+   Atmos2(15500.0); std::cout << "Atmos2() --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.at(15500.0); std::cout << "Atmos2.at --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHgp(15500.0); std::cout << "Atmos2.atHgp --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHgm(15500.0); std::cout << "Atmos2.atHgm --- Hgm, P, rho:" << Atmos2.Hgm() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHpa(15500.0); std::cout << "Atmos2.atHpa --- Hpa, P, rho:" << Atmos2.Hpa() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHda(15500.0); std::cout << "Atmos2.atHda --- Hda, P, rho:" << Atmos2.Hda() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   // full range tests
 
-   for (int m = 0; m < dTs.size(); m++)
+   std::cout << "Atmosphere Properties Model Test Data-- - Validated against \"US Standard Atmosphere, 1976\"" << std::endl << std::endl << std::endl;
+   std::cout << "(2) dT offset, evaluated at test altitudes, should match results of test data case (3) results, " << std::endl;
+   std::cout << "    Hgm     Hgp     Hpa     Hda       T           rho             P       a         theta         sigma         delta         kappa          visc" << std::endl;
+   std::cout << "    (m)     (m)     (m)     (m)     (K)      (kg/m^3)       (N/m^2)   (m/s)           (1)           (1)           (1)           (1)     (N*s/m^2)" << std::endl;
+
+   for (size_t i = 0; i < Hgp_in.size(); i++)
    {
-      std::cout << "AtmSI(Hgp,dT=" << dTs[m] << ")" << std::endl;
-      std::cout << "        Hgp(m)             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int j = 0; j < Hgp_in.size(); j++)
-      {
-         AtmSI(Hgp_in[m], dTs[m], T, rho, P, a, theta, sigma, delta, kappa);
-         std::cout << std::scientific << std::setprecision(6) << std::setw(14) << Hgp_in[m]
-            << std::setprecision(6) << std::setw(14) << T
-            << std::setprecision(6) << std::setw(14) << rho
-            << std::setprecision(6) << std::setw(14) << P
-            << std::setprecision(6) << std::setw(14) << a
-            << std::setprecision(6) << std::setw(14) << theta
-            << std::setprecision(6) << std::setw(14) << sigma
-            << std::setprecision(6) << std::setw(14) << delta
-            << std::setprecision(6) << std::setw(14) << kappa
-            << std::endl;
-      }
+      Atmos2.atHgp(Hgp_in[i]);   // compute all properties, including alternate altitude definitions, at test point
+      writeTestLine(Atmos2.Hgm(), Atmos2.Hgp(), Atmos2.Hpa(), Atmos2.Hda(), Atmos2.T(), Atmos2.rho(), Atmos2.P(), Atmos2.a(), Atmos2.theta(), Atmos2.sigma(), Atmos2.delta(), Atmos2.kappa(), Atmos2.visc());
    }
 
-   //------- tests -------
+   //// (3) use standard lapse rates and SI units from AtmosParameters_si with an initial condition selected to match an output from (2), though not at an existing breakpoint (for generality). Since the intial condition does not change the temperature profile, the results should match those obtained from test (2) above.
 
-	// AtmSIRatio
-	// dT for std, hot, cold
-   std::cout << "AtmSIRatio(Hgp,dT=" << dTstd << "), std" << std::endl;
-   std::cout << "        Hgp(m)          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgp_in.size(); m++)
-   {
-      AtmSIRatios(Hgp_in[m], dTstd, theta, sigma, delta, kappa);
-      std::cout << std::scientific << std::setprecision(6) << std::setw(14) << Hgp_in[m]
-         << std::setprecision(6) << std::setw(14) << theta
-         << std::setprecision(6) << std::setw(14) << sigma
-         << std::setprecision(6) << std::setw(14) << delta
-         << std::setprecision(6) << std::setw(14) << kappa
-         << std::endl;
-   }
-   std::cout << std::endl << std::endl;
+//   Hic = 0.0;
+//   Tic = 288.15;
+//   Pic = 101325.0; 
+//   Atmos(Hic, Tic, Pic, AtmosParameters_si);   // standard lapse rates used to construct profiles through initial condition point
+//
+//   // (4) custom initial conditions for H & P and custom temperature profile (T initial condition is then interpolated from custom profile)
+//   // construct a custom profile that is equivalent in layer extents and lapse rates to one from above, though not at the same breakpoints, then the results must match.
+//
+//   Hic = 0.0;
+//   Pic = 101325.0;
+//   Atmos(Hic, Pic, Hj, Tj, AtmosParameters_si);
+//
+//   // (5) fully custom, initial conditions and temperature gradient (lapse rates). How to test? (1) construct conditions and profile equivalent to case (4); then results must match. Plus, to test that the custom input really do alter the results and the match in (1) is not some kind of bug, create another and different custom profile and conditions to show that the results do change with input.
+//
+//
+//   Hic = 0.0;        // set same as (4) above
+//   Tic = 288.15;     // set from output of (4) at Hic
+//   Pic = 101325.0;   // set same as (4) above
+//   // Tgradj = asdfasdf;  // compute using (Hj,Tj) from (4)
+//   Atmos(Hic, Tic, Pic, Hj, Tgradj, AtmosParameters_si);   // (1) custom temperature gradient profile (i.e. lapse rates) and initial condition (Hic, Tic, Pic)
+//
+//   // repeat with alternative inputs to get different object
+//
+////------- tests -------
 
-   std::cout << "AtmSIRatio(Hgp,dT=" << dThot << "), hot" << std::endl;
-   std::cout << "        Hgp(m)          T/T0      rho/rho0         P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgp_in.size(); m++)
-   {
-      AtmSIRatios(Hgp_in[m], dThot, theta, sigma, delta, kappa);
-      std::cout << std::scientific << std::setprecision(6) << std::setw(14) << Hgp_in[m]
-         << std::setprecision(6) << std::setw(14) << theta
-         << std::setprecision(6) << std::setw(14) << sigma
-         << std::setprecision(6) << std::setw(14) << delta
-         << std::setprecision(6) << std::setw(14) << kappa
-         << std::endl;
-   }
-   std::cout << std::endl << std::endl;
-
-   std::cout << "AtmSIRatio(Hgp,dT=" << dTcold << "), cold" << std::endl;
-   std::cout << "        Hgp(m)          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgp_in.size(); m++)
-   {
-      AtmSIRatios(Hgp_in[m], dTcold, theta, sigma, delta, kappa);
-      std::cout << std::scientific << std::setprecision(6) << std::setw(14) << Hgp_in[m]
-         << std::setprecision(6) << std::setw(14) << theta
-         << std::setprecision(6) << std::setw(14) << sigma
-         << std::setprecision(6) << std::setw(14) << delta
-         << std::setprecision(6) << std::setw(14) << kappa
-         << std::endl;
-   }
-   std::cout << std::endl;
-
-	// AtmSI
-	// calls AtmSIRatio (tested above), results differ only by multiplication by reference values, so it suffices to test only at std day conditions
-   std::cout << "AtmSI(Hgp,dT=" << dTstd << "), std" << std::endl;
-   std::cout << "        Hgp(m)             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgp_in.size(); m++)
-   {
-      AtmSI(Hgp_in[m], dTstd, T, rho, P, a, theta, sigma, delta, kappa);
-      std::cout << std::scientific << std::setprecision(6) << std::setw(14) << Hgp_in[m]
-         << std::setprecision(6) << std::setw(14) << T
-         << std::setprecision(6) << std::setw(14) << rho
-         << std::setprecision(6) << std::setw(14) << P
-         << std::setprecision(6) << std::setw(14) << a
-         << std::setprecision(6) << std::setw(14) << theta
-         << std::setprecision(6) << std::setw(14) << sigma
-         << std::setprecision(6) << std::setw(14) << delta
-         << std::setprecision(6) << std::setw(14) << kappa
-         << std::endl;
-   }
-   std::cout << std::endl << std::endl;
-
-// (4) validate the eight AtmSI_H... functions
-  // The following eight functions use the above tested AtmSI for the property results, the added code to test is that which computes the various altitude types (geometric, pressure, density altitudes; Hgm, Hpa, Hda) corresponding to the geopotential (Hgp) and temperature. Using same Hgp input, the above results can serve as the "should be" comparison data for the property (T,rho,P, ...) computation tests below.
-
-   // All eight functions do the same computations but with different altitude type and temperature type (dT constant or T at alt) as inputs, so given equivalent input they should give equivalent results. Geopotential altitude is the basic altitude type for the atmosphere models, so test AtmSI_HgpdT & AtmSI_HgpT first. Compare altitudes Hgm, Hpa, Hda to hand calculations (or other authoritative or carefully verified source). Once proven these outputs become the "should be" results for the remaining six function tests.
-   // So, the altitude results Hgm, Hpa, Hda output from AtmSI_HgpdT are saved for use as input to the remaining six functions---these constitute the equivalent input, since they correspond to the Hgp used in the first two tests.
-
-// loop through dTs, testing the eight functions in sequence at each---all eight should generate the same results for the same dT (i.e. all std should match, then all hot, then all cold)
-
-   for (int n = 0; n < dTs.size(); n++)
-   {
-      double dT = dTs[n];
-      // 4.1 Test AtmSI_HgpdT. Compare altitudes Hgm, Hpa, Hda to hand calculations (or other authoritative or carefully verified source). Once proven these outputs become the "should be" results for the remaining seven function tests.
-         // AtmSI_HgpdT -- Hgp,dT input
-         // for geometric altitude, Hgm=Hgp=0; but above alt 0, then Hgm > Hgp
-         // for std day, Hgp=Hpa=Hda
-         // for hot day Hda > Hgp, Hpa < Hgp
-         // for cold day Hda < Hgp, Hpa > Hgp
-      std::cout << "AtmSI_HgpdT(Hgp,dT=" << dT << ")" << std::endl;
-      std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int m = 0; m < Hgp_in.size(); m++)
-      {
-         AtmSI_HgpdT(Hgm_out[m], Hgp_in[m], Hpa_out[m], Hda_out[m], dT, T_out[m], rho, P, a, theta, sigma, delta, kappa);
-         writeTestLine(Hgm_out[m], Hgp_in[m], Hpa_out[m], Hda_out[m], dT, T_out[m], rho, P, a, theta, sigma, delta, kappa);
-      }
-      std::cout << std::endl << std::endl;
-
-      // save output for use as inputs to the tests which follow, as described above
-      Hgm_in = Hgm_out;
-      Hpa_in = Hpa_out;
-      Hda_in = Hda_out;
-      T_in = T_out;
-
-      // 4.2 Test AtmSI_HgpT using T output above in (4.1), compare to (4.1)
-         // AtmSI_HgpT  -- Hgp,T input
-         // differs from AtmSI_HgpdT only by input of T instead of dT; dT is computed from subtraction std day T (which is computed by AtmSI already tested). The test then uses the T output from AtmSI_HgpdT tested above, so the inputs are equivalent and results should be the same.
-      std::cout << "AtmSI_HgpT(Hgp,T)" << std::endl;
-      std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int m = 0; m < Hgp_in.size(); m++)
-      {
-         AtmSI_HgpT(Hgm_out[m], Hgp_in[m], Hpa_out[m], Hda_out[m], dT_out, T_in[m], rho, P, a, theta, sigma, delta, kappa);
-         writeTestLine(Hgm_out[m], Hgp_in[m], Hpa_out[m], Hda_out[m], dT, T_in[m], rho, P, a, theta, sigma, delta, kappa);
-      }
-      std::cout << std::endl << std::endl;
-
-      // 4.3 Test AtmSI_HgmdT using Hgm output above in (4.1), compare to (4.1)
-         // AtmSI_HgmdT -- Hgm,dT input
-         // very, very similar to AtmSI_HgpdT above, differs by input of Hgm instead of Hgp, order of computation changed from AtmSI_HgpdT, but otherwise is the same
-         // using the geometric altitude output from test of AtmSI_HgpdT as input here should then return all the same results, including Hgp_out == Hgp_in
-      std::cout << "AtmSI_HgmdT(Hgm,dT=" << dT << ")" << std::endl;
-      std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int m = 0; m < Hgm_in.size(); m++)
-      {
-         AtmSI_HgmdT(Hgm_in[m], Hgp_out[m], Hpa_out[m], Hda_out[m], dT, T_out[m], rho, P, a, theta, sigma, delta, kappa);
-         writeTestLine(Hgm_in[m], Hgp_out[m], Hpa_out[m], Hda_out[m], dT, T_out[m], rho, P, a, theta, sigma, delta, kappa);
-      }
-      std::cout << std::endl << std::endl;
-
-      // 4.4 Test AtmSI_HgmT using Hgm and T output above in (4.1), compare to (4.1)
-         // AtmSI_HgmT  -- Hgm,dT input
-         // differs from AtmSI_HgmdT only by input of T instead of d; dT is computed from subtraction std day T (which is computed by AtmSI already tested). The test then uses the T output from AtmSI_HgmdT tested above, so the inputs are equivalent and results should be the same.
-      std::cout << "AtmSI_HgmT(Hgm,T)" << std::endl;
-      std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int m = 0; m < Hgm_in.size(); m++)
-      {
-         AtmSI_HgmT(Hgm_in[m], Hgp_out[m], Hpa_out[m], Hda_out[m], dT_out, T_in[m], rho, P, a, theta, sigma, delta, kappa);
-         writeTestLine(Hgm_in[m], Hgp_out[m], Hpa_out[m], Hda_out[m], dT_out, T_in[m], rho, P, a, theta, sigma, delta, kappa);
-      }
-      std::cout << std::endl << std::endl;
-
-      // 4.5 Test AtmSI_HpadT using Hpa output above in (4.1), compare to (4.1)
-         // AtmSI_HpadT -- Hpa,dT input
-         // adds computation of altitudes, all other results from AtmSI, need only add test altitude computations
-      std::cout << "AtmSI_HpadT(Hpa,dT=" << dT << ")" << std::endl;
-      std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int m = 0; m < Hpa_in.size(); m++)
-      {
-         AtmSI_HpadT(Hgm_out[m], Hgp_out[m], Hpa_in[m], Hda_out[m], dT, T_out[m], rho, P, a, theta, sigma, delta, kappa);
-         writeTestLine(Hgm_out[m], Hgp_out[m], Hpa_in[m], Hda_out[m], dT, T_out[m], rho, P, a, theta, sigma, delta, kappa);
-      }
-      std::cout << std::endl << std::endl;
-
-   // 4.6 Test AtmSI_HpaT using Hpa and T output above in (4.1), compare to (4.1)
-      // AtmSI_HpaT  -- Hpa,T input
-      // differs from AtmSI_HpaT only by input of T instead of d; dT is computed from subtraction std day T (which is computed by AtmSI already tested). The test then uses the T output from AtmSI_HpadT tested above, so the inputs are equivalent and results should be the same.
-      std::cout << "AtmSI_HpaT(Hgm,T)" << std::endl;
-      std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int m = 0; m < Hpa_in.size(); m++)
-      {
-         AtmSI_HpaT(Hgm_out[m], Hgp_out[m], Hpa_in[m], Hda_out[m], dT_out, T_in[m], rho, P, a, theta, sigma, delta, kappa);
-         writeTestLine(Hgm_out[m], Hgp_out[m], Hpa_in[m], Hda_out[m], dT_out, T_in[m], rho, P, a, theta, sigma, delta, kappa);
-      }
-      std::cout << std::endl << std::endl;
-
-      // 4.7 Test AtmSI_HdadT using Hda output above in (4.1), compare to (4.1)
-         // AtmSI_HdadT -- Hds,dT input
-         // adds computation of altitudes, all other results from AtmSI, need only add test altitude computations
-      std::cout << "AtmSI_HdadT(Hpa,dT=" << dT << ")" << std::endl;
-      std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int m = 0; m < Hda_in.size(); m++)
-      {
-         AtmSI_HdadT(Hgm_out[m], Hgp_out[m], Hpa_out[m], Hda_in[m], dT, T_out[m], rho, P, a, theta, sigma, delta, kappa);
-         writeTestLine(Hgm_out[m], Hgp_out[m], Hpa_out[m], Hda_in[m], dT, T_out[m], rho, P, a, theta, sigma, delta, kappa);
-      }
-      std::cout << std::endl << std::endl;
-
-      // 4.8 Test AtmSI_HdaT using Hda and T output above in (4.1), compare to (4.1)
-         // AtmSI_HdaT  -- Hda,dT input
-         // differs from AtmSI_HdadT only by input of T instead of d; dT is computed from subtraction std day T (which is computed by AtmSI already tested). The test then uses the T output from AtmSI_HdadT tested above, so the inputs are equivalent and results should be the same.
-      std::cout << "AtmSI_HpaT(Hgm,T)" << std::endl;
-      std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-      for (int m = 0; m < Hda_in.size(); m++)
-      {
-         AtmSI_HpaT(Hgm_out[m], Hgp_out[m], Hpa_out[m], Hda_in[m], dT_out, T_in[m], rho, P, a, theta, sigma, delta, kappa);
-         writeTestLine(Hgm_out[m], Hgp_out[m], Hpa_out[m], Hda_in[m], dT_out, T_in[m], rho, P, a, theta, sigma, delta, kappa);
-      }
-      std::cout << std::endl << std::endl;
-
-   } // end of loops through dTs comparing results of tests (4.1) through (4.8)
-
-//---------------------------------------------------------------------------------
-
-   // These functions are overloaded versions of the above. The return results are supplied in an Atm type variable, so the argument list is shorter. Otherwise the functions, their operation, and results are the same as those above. In fact, internally each of these functions works by calling the above functions and placing the results into the return Atm variable. So once the above functions are proven, these functions results' can be directly compared with the above of the same name for validation.
-
-   // Atm AtmSI_HgpdT(double Hgp, double dT = 0.0)
-   std::cout << "AtmSI_HgpdT(Hgp,dT=" << dTstd << "), std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgp_in.size(); m++)
-   {
-      Atm atmsiHgpdT = AtmSI_HgpdT(Hgp_in[m], dTstd);
-      writeTestLine(atmsiHgpdT.Hgm, atmsiHgpdT.Hgp, atmsiHgpdT.Hpa, atmsiHgpdT.Hda, atmsiHgpdT.dT, atmsiHgpdT.T,
-         atmsiHgpdT.rho, atmsiHgpdT.P, atmsiHgpdT.a, atmsiHgpdT.theta, atmsiHgpdT.sigma, atmsiHgpdT.delta, atmsiHgpdT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-   // without dT
-   std::cout << "AtmSI_HgpdT(Hgp), default to std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgp_in.size(); m++)
-   {
-      Atm atmsiHgp = AtmSI_Hgp(Hgp_in[m]);
-      writeTestLine(atmsiHgp.Hgm, atmsiHgp.Hgp, atmsiHgp.Hpa, atmsiHgp.Hda, atmsiHgp.dT, atmsiHgp.T,
-         atmsiHgp.rho, atmsiHgp.P, atmsiHgp.a, atmsiHgp.theta, atmsiHgp.sigma, atmsiHgp.delta, atmsiHgp.kappa);
-   }
-   std::cout << std::endl << std::endl;
-
-   // Atm AtmSI_HgpT(double Hgp, double T = 288.15);
-   // with T
-   std::cout << "AtmSI_HgpT(Hgp,T=" << T0 << "), std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgp_in.size(); m++)
-   {
-      Atm atmsiHgpT = AtmSI_HgpT(Hgp_in[m], T_in[m]);
-      writeTestLine(atmsiHgpT.Hgm, atmsiHgpT.Hgp, atmsiHgpT.Hpa, atmsiHgpT.Hda, atmsiHgpT.dT, atmsiHgpT.T,
-         atmsiHgpT.rho, atmsiHgpT.P, atmsiHgpT.a, atmsiHgpT.theta, atmsiHgpT.sigma, atmsiHgpT.delta, atmsiHgpT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-
-   // Atm AtmSI_HgmdT(double Hgm, double dT = 0.0);
-   // with dT
-   std::cout << "AtmSI_HgmdT(Hgp,dT=" << dTstd << "), std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgm_in.size(); m++)
-   {
-      Atm atmsiHgmdT = AtmSI_HgmdT(Hgm_in[m], dTstd);
-      writeTestLine(atmsiHgmdT.Hgm, atmsiHgmdT.Hgp, atmsiHgmdT.Hpa, atmsiHgmdT.Hda, atmsiHgmdT.dT, atmsiHgmdT.T,
-         atmsiHgmdT.rho, atmsiHgmdT.P, atmsiHgmdT.a, atmsiHgmdT.theta, atmsiHgmdT.sigma, atmsiHgmdT.delta, atmsiHgmdT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-   // without dT
-   std::cout << "AtmSI_HgmdT(Hgp), default to std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgm_in.size(); m++)
-   {
-      Atm atmsiHgmdT = AtmSI_HgmdT(Hgp_in[m]);
-      writeTestLine(atmsiHgmdT.Hgm, atmsiHgmdT.Hgp, atmsiHgmdT.Hpa, atmsiHgmdT.Hda, atmsiHgmdT.dT, atmsiHgmdT.T,
-         atmsiHgmdT.rho, atmsiHgmdT.P, atmsiHgmdT.a, atmsiHgmdT.theta, atmsiHgmdT.sigma, atmsiHgmdT.delta, atmsiHgmdT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-
-   // Atm AtmSI_HgmT(double Hgm, double T = 288.15);
-   // with T
-   std::cout << "AtmSI_HgmT(Hgm,T=" << T0 << ")" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgm_in.size(); m++)
-   {
-      Atm atmsiHgmdT = AtmSI_HgmT(Hgp_in[m], T_in[m]);
-      writeTestLine(atmsiHgmdT.Hgm, atmsiHgmdT.Hgp, atmsiHgmdT.Hpa, atmsiHgmdT.Hda, atmsiHgmdT.dT, atmsiHgmdT.T,
-         atmsiHgmdT.rho, atmsiHgmdT.P, atmsiHgmdT.a, atmsiHgmdT.theta, atmsiHgmdT.sigma, atmsiHgmdT.delta, atmsiHgmdT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-   // without T
-   std::cout << "AtmSI_HgmT(Hgm), default to std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hgm_in.size(); m++)
-   {
-      Atm atmsiHgmdT = AtmSI_HgmT(Hgp_in[m]);
-      writeTestLine(atmsiHgmdT.Hgm, atmsiHgmdT.Hgp, atmsiHgmdT.Hpa, atmsiHgmdT.Hda, atmsiHgmdT.dT, atmsiHgmdT.T,
-         atmsiHgmdT.rho, atmsiHgmdT.P, atmsiHgmdT.a, atmsiHgmdT.theta, atmsiHgmdT.sigma, atmsiHgmdT.delta, atmsiHgmdT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-
-   // Atm AtmSI_HpadT(double Hpa, double dT = 0.0);
-   // with dT
-   std::cout << "AtmSI_HpadT(Hpa,dT=" << dTstd << "), std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hpa_in.size(); m++)
-   {
-      Atm atmsiHpadT = AtmSI_HpadT(Hpa_in[m], dTstd);
-      writeTestLine(atmsiHpadT.Hgm, atmsiHpadT.Hgp, atmsiHpadT.Hpa, atmsiHpadT.Hda, atmsiHpadT.dT, atmsiHpadT.T,
-         atmsiHpadT.rho, atmsiHpadT.P, atmsiHpadT.a, atmsiHpadT.theta, atmsiHpadT.sigma, atmsiHpadT.delta, atmsiHpadT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-   // without dT
-   std::cout << "AtmSI_HpadT(Hpa), default to std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hpa_in.size(); m++)
-   {
-      Atm atmsiHpadT = AtmSI_HpadT(Hpa_in[m]);
-      writeTestLine(atmsiHpadT.Hgm, atmsiHpadT.Hgp, atmsiHpadT.Hpa, atmsiHpadT.Hda, atmsiHpadT.dT, atmsiHpadT.T,
-         atmsiHpadT.rho, atmsiHpadT.P, atmsiHpadT.a, atmsiHpadT.theta, atmsiHpadT.sigma, atmsiHpadT.delta, atmsiHpadT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-
-   // Atm AtmSI_HpaT(double Hpa, double T = 288.15);
-   // with T
-   std::cout << "AtmSI_HpaT(Hgp,T=" << T0 << "), std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hpa_in.size(); m++)
-   {
-      Atm atmsiHpaT = AtmSI_HpaT(Hgp_in[m], T_in[m]);
-      writeTestLine(atmsiHpaT.Hgm, atmsiHpaT.Hgp, atmsiHpaT.Hpa, atmsiHpaT.Hda, atmsiHpaT.dT, atmsiHpaT.T,
-         atmsiHpaT.rho, atmsiHpaT.P, atmsiHpaT.a, atmsiHpaT.theta, atmsiHpaT.sigma, atmsiHpaT.delta, atmsiHpaT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-   // without T
-   std::cout << "AtmSI_HpaT(Hgp), default to std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hpa_in.size(); m++)
-   {
-      Atm atmsiHpaT = AtmSI_HpaT(Hgp_in[m]);
-      writeTestLine(atmsiHpaT.Hgm, atmsiHpaT.Hgp, atmsiHpaT.Hpa, atmsiHpaT.Hda, atmsiHpaT.dT, atmsiHpaT.T,
-         atmsiHpaT.rho, atmsiHpaT.P, atmsiHpaT.a, atmsiHpaT.theta, atmsiHpaT.sigma, atmsiHpaT.delta, atmsiHpaT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-
-   // Atm AtmSI_HdadT(double Hda, double dT = 0.0);
-   // with dT
-   std::cout << "AtmSI_HdadT(Hgp,dT=" << dTstd << "), std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hda_in.size(); m++)
-   {
-      Atm atmsiHdadT = AtmSI_HdadT(Hgp_in[m], dTstd);
-      writeTestLine(atmsiHdadT.Hgm, atmsiHdadT.Hgp, atmsiHdadT.Hpa, atmsiHdadT.Hda, atmsiHdadT.dT, atmsiHdadT.T,
-         atmsiHdadT.rho, atmsiHdadT.P, atmsiHdadT.a, atmsiHdadT.theta, atmsiHdadT.sigma, atmsiHdadT.delta, atmsiHdadT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-   // without dT
-   std::cout << "AtmSI_HdadT(Hgp), default to std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hda_in.size(); m++)
-   {
-      Atm atmsiHdadT = AtmSI_HdadT(Hgp_in[m]);
-      writeTestLine(atmsiHdadT.Hgm, atmsiHdadT.Hgp, atmsiHdadT.Hpa, atmsiHdadT.Hda, atmsiHdadT.dT, atmsiHdadT.T,
-         atmsiHdadT.rho, atmsiHdadT.P, atmsiHdadT.a, atmsiHdadT.theta, atmsiHdadT.sigma, atmsiHdadT.delta, atmsiHdadT.kappa);
-   }
-   std::cout << std::endl << std::endl; 
-
-   // Atm AtmSI_HdaT(double Hda, double T = 288.15);
-   // with T
-   std::cout << "AtmSI_HdaT(Hgp,T=" << T0 << "), std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hda_in.size(); m++)
-   {
-      Atm atmsiHdaT = AtmSI_HdaT(Hgp_in[m], T_in[m]);
-      writeTestLine(atmsiHdaT.Hgm, atmsiHdaT.Hgp, atmsiHdaT.Hpa, atmsiHdaT.Hda, atmsiHdaT.dT, atmsiHdaT.T,
-         atmsiHdaT.rho, atmsiHdaT.P, atmsiHdaT.a, atmsiHdaT.theta, atmsiHdaT.sigma, atmsiHdaT.delta, atmsiHdaT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-   // without T
-   std::cout << "AtmSI_HdaT(Hgp), default to std day" << std::endl;
-   std::cout << "       Hgm(m)        Hgp(m)        Hpa(m)        Hda(m)            dT             T           rho             P             a          T/T0      rho/rho0          P/P0          a/a0" << std::endl;
-   for (int m = 0; m < Hda_in.size(); m++)
-   {
-      Atm atmsiHdaT = AtmSI_HdaT(Hgp_in[m]);
-      writeTestLine(atmsiHdaT.Hgm, atmsiHdaT.Hgp, atmsiHdaT.Hpa, atmsiHdaT.Hda, atmsiHdaT.dT, atmsiHdaT.T,
-         atmsiHdaT.rho, atmsiHdaT.P, atmsiHdaT.a, atmsiHdaT.theta, atmsiHdaT.sigma, atmsiHdaT.delta, atmsiHdaT.kappa);
-   }
-   std::cout << std::endl << std::endl;
-
-
-	return(0);
 }
