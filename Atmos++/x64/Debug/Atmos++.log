@@ -1,17 +1,17 @@
 ﻿  Atmos.cpp
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(166): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(181): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(194): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(220): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(250): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(302): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(307): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(327): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(332): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(358): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(364): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(404): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(410): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(447): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(453): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(163): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(178): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(191): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(217): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(246): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(298): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(303): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(323): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(328): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(354): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(360): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(400): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(406): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(443): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\curtis\documents\engr\rnd\atmos++\atmos++\atmos.cpp(449): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
   Atmos++.vcxproj -> C:\Users\Curtis\Documents\Engr\RnD\Atmos++\x64\Debug\Atmos++.lib

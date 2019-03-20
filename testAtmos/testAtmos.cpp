@@ -65,16 +65,16 @@ int main()
    Atmos1(5500.0); std::cout << "Atmos1() --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
    Atmos1.at(5500.0); std::cout << "Atmos1.at --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
    Atmos1.atHgp(5500.0); std::cout << "Atmos1.atHgp --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
-   Atmos1.atHgm(5500.0); std::cout << "Atmos1.atHgm --- Hgm, P, rho:" << Atmos1.Hgm() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
-   Atmos1.atHpa(5500.0); std::cout << "Atmos1.atHpa --- Hpa, P, rho:" << Atmos1.Hpa() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
-   Atmos1.atHda(5500); std::cout << "Atmos1.atHda --- Hda, P, rho:" << Atmos1.Hda() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHgm(Atmos1.Hgm()); std::cout << "Atmos1.atHgm --- Hgm, P, rho:" << Atmos1.Hgm() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHpa(Atmos1.Hpa()); std::cout << "Atmos1.atHpa --- Hpa, P, rho:" << Atmos1.Hpa() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHda(Atmos1.Hda()); std::cout << "Atmos1.atHda --- Hda, P, rho:" << Atmos1.Hda() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
    // stratosphere
    Atmos1(15500.0); std::cout << "Atmos1() --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
    Atmos1.at(15500.0); std::cout << "Atmos1.at --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
    Atmos1.atHgp(15500.0); std::cout << "Atmos1.atHgp --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
-   Atmos1.atHgm(15500.0); std::cout << "Atmos1.atHgm --- Hgm, P, rho:" << Atmos1.Hgm() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
-   Atmos1.atHpa(13931.2); std::cout << "Atmos1.atHpa --- Hpa, P, rho:" << Atmos1.Hpa() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
-   Atmos1.atHda(15500.0); std::cout << "Atmos1.atHda --- Hda, P, rho:" << Atmos1.Hda() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHgm(Atmos1.Hgm()); std::cout << "Atmos1.atHgm --- Hgm, P, rho:" << Atmos1.Hgm() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHpa(Atmos1.Hpa()); std::cout << "Atmos1.atHpa --- Hpa, P, rho:" << Atmos1.Hpa() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHda(Atmos1.Hda()); std::cout << "Atmos1.atHda --- Hda, P, rho:" << Atmos1.Hda() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
 
    // full range tests
 
@@ -94,19 +94,15 @@ int main()
    
    // point tests
    // troposphere
-   Atmos2(5500.0); std::cout << "Atmos2() --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
-   Atmos2.at(5500.0); std::cout << "Atmos2.at --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
    Atmos2.atHgp(5500.0); std::cout << "Atmos2.atHgp --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
-   Atmos2.atHgm(5500.0); std::cout << "Atmos2.atHgm --- Hgm, P, rho:" << Atmos2.Hgm() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
-   Atmos2.atHpa(4981.4); std::cout << "Atmos2.atHpa --- Hpa, P, rho:" << Atmos2.Hpa() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
-   Atmos2.atHda(5125.0); std::cout << "Atmos2.atHda --- Hda, P, rho:" << Atmos2.Hda() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHgm(Atmos2.Hgm()); std::cout << "Atmos2.atHgm --- Hgm, P, rho:" << Atmos2.Hgm() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHpa(Atmos2.Hpa()); std::cout << "Atmos2.atHpa --- Hpa, P, rho:" << Atmos2.Hpa() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHda(Atmos2.Hda()); std::cout << "Atmos2.atHda --- Hda, P, rho:" << Atmos2.Hda() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
    // stratosphere
-   Atmos2(15500.0); std::cout << "Atmos2() --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
-   Atmos2.at(15500.0); std::cout << "Atmos2.at --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
    Atmos2.atHgp(15500.0); std::cout << "Atmos2.atHgp --- Hgp, P, rho:" << Atmos2.Hgp() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
-   Atmos2.atHgm(15500.0); std::cout << "Atmos2.atHgm --- Hgm, P, rho:" << Atmos2.Hgm() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
-   Atmos2.atHpa(15500.0); std::cout << "Atmos2.atHpa --- Hpa, P, rho:" << Atmos2.Hpa() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
-   Atmos2.atHda(15500.0); std::cout << "Atmos2.atHda --- Hda, P, rho:" << Atmos2.Hda() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHgm(Atmos2.Hgm()); std::cout << "Atmos2.atHgm --- Hgm, P, rho:" << Atmos2.Hgm() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHpa(Atmos2.Hpa()); std::cout << "Atmos2.atHpa --- Hpa, P, rho:" << Atmos2.Hpa() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
+   Atmos2.atHda(Atmos2.Hda()); std::cout << "Atmos2.atHda --- Hda, P, rho:" << Atmos2.Hda() << " " << Atmos2.P() << " " << Atmos2.rho() << std::endl;
    // full range tests
 
    std::cout << "Atmosphere Properties Model Test Data-- - Validated against \"US Standard Atmosphere, 1976\"" << std::endl << std::endl << std::endl;

@@ -143,17 +143,14 @@ inline double dh_pr(double PR, double PRk, double T, double Tk, double Tgradk, d
 }
 
 // layer dh from density ratio
-inline double dh_sgm(double sgm, double sgmk, double T, double Tk, double Tgradk, double GMR)
+inline double dh_sgm(double sgm, double sgmk, double Tk, double Tgradk, double GMR)
 {
    double dh;
 
-   // local, layer density ratio from density ratio w.r.t. datum at h & bottom of layer k
-   double sr = sgm / sgmk * T / Tk;
-
    if (Tgradk != 0)
-      dh = Tk * (pow(sr, (-Tgradk / GMR)) - 1) / Tgradk;
+      dh = Tk * (pow(sgmk/sgm, 1/(1+GMR/Tgradk)) - 1) / Tgradk;
    else
-      dh = -(Tk / GMR)*log(sr);
+      dh = -(Tk / GMR)*log(sgm/sgmk);
 
    return(dh);
 }
@@ -184,7 +181,7 @@ inline double fHda(double sigma, std::vector<double> StdDayHk, std::vector<doubl
    int n = findLayer_PD(nLayers, sigma, StdDayDRk);
 
    // from sigma, compute dh in layer std day profile, and Hda
-   hda_out = StdDayHk[n] + dh_sgm(sigma, StdDayDRk[n], T, StdDayTk[n], StdDayTgradk[n], GMR);
+   hda_out = StdDayHk[n] + dh_sgm(sigma, StdDayDRk[n], StdDayTk[n], StdDayTgradk[n], GMR);
 
    return(hda_out);
 }
@@ -205,7 +202,7 @@ inline void initializeProfile(double T0, double GMR, std::vector<double> Hk, std
    }
 
    PRk[0] = 1.0;
-   DRk[0] = 1.0;
+   DRk[0] = PRk[0]*T0/Tk[0];
    for (int k = 0; k < nLayers; k++)
    {
       PRk[k + 1] = PRk[k] * pr(Hk[k + 1], Hk[k], Tk[k + 1], Tk[k], Tgradk[k], GMR);
@@ -236,7 +233,6 @@ inline void initializePRkDRk(double T0, double GMR, int n, double Hic, double Ti
    }
 
    // construct density ratio profile
-   DRk[0] = 1.0;
    for (int k = 0; k < nLayers; k++)
    {
       DRk[k + 1] = PRk[k + 1] * T0 / Tk[k + 1];
@@ -575,7 +571,7 @@ int Atmos::atHda(double hda_in)   // given density altitude
    int n = findLayer_PD(nLayers, sgma, DRk);
 
    // from sigma, find dh to Hgp in layer n of this.profile, thence hgp
-   hgp = StdDayHk[n] + dh_sgm(sgma, DRk[n], thta*T0, Tk[n], StdDayTgradk[n], GMR);
+   hgp = Hk[n] + dh_sgm(sgma, DRk[n], Tk[n], Tgradk[n], GMR);
 
    // now with hgp, compute other altitudes and properties
 
