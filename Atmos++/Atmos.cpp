@@ -37,7 +37,7 @@ const double S_si = 110.4;                       // (K) air Sutherland temperatu
 // defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
 const std::vector<double> StdDayHk_si({ 0.0,  11000.0,  20000.0,  32000.0,  47000.0,  51000.0,  71000.0,  84852.0 });
 const std::vector<double> StdDayTk_si({ 288.15,   216.65,   216.65,   228.65,   270.65,   270.65,   214.65,   186.95 });
-const std::vector<double> StdDayTgradk_si({ -0.0065000, 0.0000000, 0.0010000, 0.0028000, 0.0000000, -0.0028000, -0.0019997 - 0.0019997 });
+const std::vector<double> StdDayTgradk_si({ -0.0065, 0.0000, 0.0010, 0.0028, 0.0000, -0.0028, -0.0019997, 0.0 });
 
 const std::vector<double> HotDayHk_si({ 0.0, 11000., 20000. });
 const std::vector<double> HotDayTk_si({ 308.15,269.65,237.65 });
@@ -67,7 +67,7 @@ const double S_us = S_si*1.8;                                          // (R) ai
    // defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
 const std::vector<double> StdDayHk_us({ 0.000, 3352.800, 6096.000, 9753.600, 14325.600, 15544.800, 21640.800, 25862.890 });
 const std::vector<double> StdDayTk_us({ 518.670, 389.970, 389.970, 411.570, 487.170, 487.170, 386.370, 336.510 });
-const std::vector<double> StdDayTgradk_us({ 1701.673, 1279.429, 1279.429, 1350.295, 1598.327, 1598.327, 1267.618, 1104.035 });
+const std::vector<double> StdDayTgradk_us({ 0 });   // definitely wrong
 
 const std::vector<double> HotDayHk_us({ 0.000, 3352.800, 6096.000 });
 const std::vector<double> HotDayTk_us({ 554.670, 485.370, 427.770 });
@@ -102,7 +102,7 @@ Atmos PolarDay_us(H0_us, P0_us, PolarDayHk_us, PolarDayTk_us, AtmosParameters_us
 inline int findLayer(int nLayers, double hgp_in, std::vector<double> Hk)
 {
    int n; for (n = 1; n <= nLayers && Hk[n] < hgp_in; n++); n--;
-   if (n >= nLayers) n = nLayers - 1;
+   //if (n >= nLayers) n = nLayers - 1;
 
    return(n);
 }
@@ -190,7 +190,7 @@ inline void initializeProfile(double T0, double GMR, std::vector<double> Hk, std
 {
    nLayers = Hk.size() - 1;
 
-   Tgradk.resize(nLayers);
+   Tgradk.resize(nLayers + 1);
    PRk.resize(nLayers + 1);
    DRk.resize(nLayers + 1);
 
@@ -200,6 +200,7 @@ inline void initializeProfile(double T0, double GMR, std::vector<double> Hk, std
    {
       Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
    }
+   Tgradk[nLayers] = 0.0;
 
    PRk[0] = 1.0;
    DRk[0] = PRk[0]*T0/Tk[0];
@@ -301,7 +302,7 @@ inline int AtmRatios(double hgp,  double T0, double GMR, std::vector<double> Hk,
    sigma = delta / theta;
    kappa = sqrt(theta);
 
-   return(0);
+   return(n);
 };
 
 inline double AirViscRatio(double theta, double Sb0)
@@ -459,6 +460,8 @@ Atmos::Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double>
 // construct temperature gradient profile
    for (int k = 0; k < nLayers; k++)
       Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
+
+   Tgradk[nLayers] = 0.0;
 
 // construct pressure ratio profile
    // find n such that Hk[n] < Hic < Hk[n + 1];
@@ -674,6 +677,7 @@ double Atmos::rho(void)
 {
    return(Rho);
 }
+
 double Atmos::P(void)
 {
    return(p);
