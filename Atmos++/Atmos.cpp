@@ -128,7 +128,7 @@ inline double pr(double h, double Hk, double T, double Tk, double Tgradk, double
 }
 
 // layer dh from pressure ratio
-inline double dh_pr(double PR, double PRk, double T, double Tk, double Tgradk, double GMR)
+inline double dh_pr(double PR, double PRk, double Tk, double Tgradk, double GMR)
 {
    double dh;
    // local, layer pressure ratio from pressure ratio w.r.t. datum at h & bottom of layer k
@@ -156,7 +156,7 @@ inline double dh_sgm(double sgm, double sgmk, double Tk, double Tgradk, double G
 }
 
 // find pressure altitude from pressure ratio
-inline double fHpa(double delta, std::vector<double> StdDayHk, std::vector<double> StdDayTk, std::vector<double> StdDayTgradk, std::vector<double> StdDayPRk, double T, double GMR)
+inline double fHpa(double delta, std::vector<double> StdDayHk, std::vector<double> StdDayTk, std::vector<double> StdDayTgradk, std::vector<double> StdDayPRk, double GMR)
 {
    double hpa_out;
 
@@ -165,13 +165,13 @@ inline double fHpa(double delta, std::vector<double> StdDayHk, std::vector<doubl
    int n = findLayer_PD(nLayers, delta, StdDayPRk);
 
    // from delta, compute dh in layer of std day profile, and Hpa
-   hpa_out = StdDayHk[n] + dh_pr(delta, StdDayPRk[n], T, StdDayTk[n], StdDayTgradk[n], GMR);
+   hpa_out = StdDayHk[n] + dh_pr(delta, StdDayPRk[n], StdDayTk[n], StdDayTgradk[n], GMR);
 
    return(hpa_out);
 }
 
 // find density altitude from density ratio
-inline double fHda(double sigma, std::vector<double> StdDayHk, std::vector<double> StdDayTk, std::vector<double> StdDayTgradk, std::vector<double> StdDayDRk, double T, double GMR)
+inline double fHda(double sigma, std::vector<double> StdDayHk, std::vector<double> StdDayTk, std::vector<double> StdDayTgradk, std::vector<double> StdDayDRk, double GMR)
 {
    double hda_out;
    
@@ -211,34 +211,80 @@ inline void initializeProfile(double T0, double GMR, std::vector<double> Hk, std
 
 }
 
-inline void initializePRkDRk(double T0, double GMR, int n, double Hic, double Tic, double Pic, std::vector<double> Hk, std::vector<double> Tk, std::vector<double> Tgradk,
+inline void initializePRkDRk(double T0, double P0, double GMR, int n, double Hic, double Tic, double Pic, std::vector<double> Hk, std::vector<double> Tk, std::vector<double> Tgradk,
    std::vector<double> &PRk, std::vector<double> &DRk)
 {
    int nLayers = Hk.size() - 1;
 
-   double PicbyPRk = pr(Hic, Hk[n], Tic, Tk[n], Tgradk[n], GMR);
-   PRk[n] = Pic / PicbyPRk;   // P at bottom of layer holding initial condition point
+   double PicbyPn = pr(Hic, Hk[n], Tic, Tk[n], Tgradk[n], GMR);
+   PRk[n] = (Pic / PicbyPn) / P0;   // P at bottom of layer holding initial condition point
 
    int k;
    // for each 0 <= k < n, compute Tk & Pk below initial condition point
    for (k = n - 1; k >= 0; k--)
    {
-      PRk[k] = PRk[k + 1] / pr(Hk[k + 1], Hk[n], Tk[k + 1], Tk[n], Tgradk[n], GMR);
+      PRk[k] = PRk[k + 1] / pr(Hk[k + 1], Hk[k], Tk[k + 1], Tk[k], Tgradk[k], GMR);
    }
 
    // for each n < k < nLayers+1, compute Tk & Pk above initial condition point
    for (k = n; k < nLayers; k++)
    {
-      PRk[k + 1] = PRk[k] * pr(Hk[k + 1], Hk[n], Tk[k + 1], Tk[n], Tgradk[n], GMR);
+      PRk[k + 1] = PRk[k] * pr(Hk[k + 1], Hk[k], Tk[k + 1], Tk[k], Tgradk[k], GMR);
    }
 
    // construct density ratio profile
-   for (int k = 0; k < nLayers; k++)
+   for (int k = 0; k < nLayers + 1; k++)
    {
-      DRk[k + 1] = PRk[k + 1] * T0 / Tk[k + 1];
+      DRk[k] = PRk[k] * T0 / Tk[k];
    }
 
 }
+
+
+//inline void initializeTgPDrk(double T0, double P0, double GMR, double Hic, double Tic, double Pic, std::vector<double> Hk, std::vector<double> &Tk, std::vector<double> Tgradk,
+//   std::vector<double> &PRk, std::vector<double> &DRk)
+//{
+//   int nLayers = Hk.size() - 1;
+//
+//   // construct temperature profile from gradient profile, (Hk,Tgradk)
+// // find n such that Hk[n] < Hic < Hk[n + 1];
+//   int n;
+//   for (n = 1; n <= nLayers && Hk[n] < Hic; n++); n--;
+//
+//   Tk[n] = Tic - Tgradk[n] * (Hic - Hk[n]);   // T at bottom of layer holding initial condition point
+//
+//   // for each 0 <= k < n, compute Tk & Pk below initial condition point
+//   for (int k = n - 1; k >= 0; k--)
+//      Tk[k] = Tk[k + 1] - Tgradk[k] * (Hk[k + 1] - Hk[k]);
+//
+//   // for each n < k < nLayers+1, compute Tk & Pk above initial condition point
+//   for (int k = n; k < nLayers; k++)
+//      Tk[k + 1] = Tk[k] + Tgradk[k] * (Hk[k + 1] - Hk[k]);
+//
+//
+//   double PicbyPn = pr(Hic, Hk[n], Tic, Tk[n], Tgradk[n], GMR);
+//   PRk[n] = (Pic / PicbyPn) / P0;   // P at bottom of layer holding initial condition point
+//
+//   int k;
+//   // for each 0 <= k < n, compute Tk & Pk below initial condition point
+//   for (k = n - 1; k >= 0; k--)
+//   {
+//      PRk[k] = PRk[k + 1] / pr(Hk[k + 1], Hk[k], Tk[k + 1], Tk[k], Tgradk[k], GMR);
+//   }
+//
+//   // for each n < k < nLayers+1, compute Tk & Pk above initial condition point
+//   for (k = n; k < nLayers; k++)
+//   {
+//      PRk[k + 1] = PRk[k] * pr(Hk[k + 1], Hk[k], Tk[k + 1], Tk[k], Tgradk[k], GMR);
+//   }
+//
+//   // construct density ratio profile
+//   for (int k = 0; k < nLayers + 1; k++)
+//   {
+//      DRk[k] = PRk[k] * T0 / Tk[k];
+//   }
+//
+//}
 
 inline int AtmRatios(double hgp,  double T0, double GMR, std::vector<double> Hk, std::vector<double> Tk, std::vector<double> Tgradk, std::vector<double> PRk, std::vector<double> DRk,
    double &theta, double &sigma, double &delta, double &kappa)
@@ -312,11 +358,12 @@ Atmos::Atmos(double dT, AtmosParameters AtmPrms)
 {
    Re = AtmPrms.Re;               // planet radius
    GMR = AtmPrms.GMR;             // combined gravity and gas constant of planet atmosphere
-   T0 = AtmPrms.T0;               // temperature
-   rho0 = AtmPrms.rho0;           // density
-   P0 = AtmPrms.P0;               // pressure
-   a0 = AtmPrms.a0;               // sonic speed
-   Sb0 = AtmPrms.S / T0;          // Sutherland temperature ratio
+   T0 = AtmPrms.T0;               // temperature at sea level std
+   rho0 = AtmPrms.rho0;           // density at sea level std
+   P0 = AtmPrms.P0;               // pressure at sea level std
+   a0 = AtmPrms.a0;               // sonic speed at sea level std
+   visc0 = AtmPrms.visc0;         // air viscosity at sea level std
+   Sb0 = AtmPrms.S / T0;          // Sutherland temperature ratio at sea level std
 
    StdDayHk = AtmPrms.StdDayHk;
    StdDayTk = AtmPrms.StdDayTk;
@@ -374,10 +421,10 @@ Atmos::Atmos(double Hic, double Tic, double Pic, AtmosParameters AtmPrms)
       Tk[k] = Tk[k + 1] - Tgradk[k] * (Hk[k + 1] - Hk[k]);
 
    // for each n < k < nLayers+1, compute Tk & Pk above initial condition point
-   for (int k = n; n <= nLayers; k++)
+   for (int k = n; k < nLayers; k++)
       Tk[k + 1] = Tk[k] + Tgradk[k] * (Hk[k + 1] - Hk[k]);
 
-   initializePRkDRk(T0, GMR, n, Hic, Tic, Pic, Hk, Tk, Tgradk, PRk, DRk);
+   initializePRkDRk(T0, P0, GMR, n, Hic, Tic, Pic, Hk, Tk, Tgradk, PRk, DRk);
 
    this->at(0.0);   // initialize object to datum (i.e. sea level)
 
@@ -420,7 +467,8 @@ Atmos::Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double>
 
    double Tic = Tk[n] + Tgradk[n] * (Hic - Hk[n]);   // temperature at initial condition point from given temperature profile
 
-   initializePRkDRk(T0, GMR, n, Hic, Tic, Pic, Hk, Tk, Tgradk, PRk, DRk);
+   initializePRkDRk(T0, P0, GMR, n, Hic, Tic, Pic, Hk, Tk, Tgradk, PRk, DRk);
+
 
    this->at(0.0);   // initialize object to datum (i.e. sea level)
 
@@ -463,10 +511,10 @@ Atmos::Atmos(double Hic, double Tic, double Pic, std::vector<double> Hj, std::ve
       Tk[k] = Tk[k + 1] - Tgradk[k] * (Hk[k + 1] - Hk[k]);
 
    // for each n < k < nLayers+1, compute Tk & Pk above initial condition point
-   for (int k = n; n <= nLayers; k++)
+   for (int k = n; k < nLayers; k++)
       Tk[k + 1] = Tk[k] + Tgradk[k] * (Hk[k + 1] - Hk[k]);
 
-   initializePRkDRk(T0, GMR, n, Hic, Tic, Pic, Hk, Tk, Tgradk, PRk, DRk);
+   initializePRkDRk(T0, P0, GMR, n, Hic, Tic, Pic, Hk, Tk, Tgradk, PRk, DRk);
 
    this->at(0.0);   // initialize object to datum (i.e. sea level)
 
@@ -521,8 +569,8 @@ int Atmos::atHgp(double hgp_in)   // given geoptential altitude
    this->at(hgp_in);
 
    hgm = hgp_in * Re / (Re - hgp_in);                                         // geometric altitude
-   hpa = fHpa(Delta, StdDayHk, StdDayTk, StdDayTgradk, StdDayPRk, TT, GMR);   // pressure altitude
-   hda = fHda(Sigma, StdDayHk, StdDayTk, StdDayTgradk, StdDayDRk, TT, GMR);   // density altitude
+   hpa = fHpa(Delta, StdDayHk, StdDayTk, StdDayTgradk, StdDayPRk, GMR);   // pressure altitude
+   hda = fHda(Sigma, StdDayHk, StdDayTk, StdDayTgradk, StdDayDRk, GMR);   // density altitude
 
    return(0);
 };
@@ -534,8 +582,8 @@ int Atmos::atHgm(double hgm_in)   // given geometric altitude
    this->at(hgp);
 
    hgm = hgm_in;                                                              // at() invalidates hgm, so it must be reset
-   hpa = fHpa(Delta, StdDayHk, StdDayTk, StdDayTgradk, StdDayPRk, TT, GMR);   // pressure altitude
-   hda = fHda(Sigma, StdDayHk, StdDayTk, StdDayTgradk, StdDayPRk, TT, GMR);   // density altitude
+   hpa = fHpa(Delta, StdDayHk, StdDayTk, StdDayTgradk, StdDayPRk, GMR);   // pressure altitude
+   hda = fHda(Sigma, StdDayHk, StdDayTk, StdDayTgradk, StdDayPRk, GMR);   // density altitude
 
    return(0);
 };
@@ -551,7 +599,7 @@ int Atmos::atHpa(double hpa_in)   // given pressure altitude
    int n = findLayer_PD(nLayers, dlta, PRk);
 
    // from delta, find dh to Hgp in layer n of this.profile, thence hgp
-   hgp = StdDayHk[n] + dh_pr(dlta, PRk[n], thta*T0, Tk[n], StdDayTgradk[n], GMR);
+   hgp = Hk[n] + dh_pr(dlta, PRk[n], Tk[n], Tgradk[n], GMR);
 
    // now with hgp, compute other altitudes and properties
 

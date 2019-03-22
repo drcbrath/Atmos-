@@ -1,5 +1,1 @@
-﻿  testAtmos.cpp
-c:\users\curtis\documents\engr\rnd\atmos++\testatmos\testatmos.cpp(42): warning C4101: 'Hic': unreferenced local variable
-c:\users\curtis\documents\engr\rnd\atmos++\testatmos\testatmos.cpp(42): warning C4101: 'Tic': unreferenced local variable
-c:\users\curtis\documents\engr\rnd\atmos++\testatmos\testatmos.cpp(42): warning C4101: 'Pic': unreferenced local variable
-  testAtmos.vcxproj -> C:\Users\Curtis\Documents\Engr\RnD\Atmos++\x64\Debug\testAtmos.exe
+﻿  testAtmos.vcxproj -> C:\Users\Curtis\Documents\Engr\RnD\Atmos++\x64\Debug\testAtmos.exe
