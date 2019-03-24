@@ -194,11 +194,15 @@ inline void initializeProfile(double T0, double GMR, std::vector<double> Hk, std
    PRk.resize(nLayers + 1);
    DRk.resize(nLayers + 1);
 
-   // should test gradient, if below a threshold, then truncate to zero to guard 
+   // for gradient, if below a threshold, then truncate to zero to guard 
    // against round-off error inappropriately generating linear thermal layers
+   double eps = std::numeric_limits<double>::epsilon();
+
    for (int k = 0; k < nLayers; k++)
    {
       Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
+      if( Tgradk[k] < 10 * eps)
+         Tgradk[k] = 0.0;
    }
    Tgradk[nLayers] = 0.0;
 
@@ -456,11 +460,18 @@ Atmos::Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double>
    Tgradk.resize(nLayers + 1);
    PRk.resize(nLayers + 1);
    DRk.resize(nLayers + 1);
-   
-// construct temperature gradient profile
-   for (int k = 0; k < nLayers; k++)
-      Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
 
+   // construct temperature gradient profile
+   // for gradient, if below a threshold, then truncate to zero to guard 
+   // against round-off error inappropriately generating linear thermal layers
+   double eps = std::numeric_limits<double>::epsilon();
+
+   for (int k = 0; k < nLayers; k++)
+   {
+      Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
+      if (Tgradk[k] < 10 * eps)
+         Tgradk[k] = 0.0;
+   }
    Tgradk[nLayers] = 0.0;
 
 // construct pressure ratio profile
@@ -494,6 +505,8 @@ Atmos::Atmos(double Hic, double Tic, double Pic, std::vector<double> Hj, std::ve
    nStdLayers = StdDayHk.size() - 1;
    initializeProfile(T0, GMR, StdDayHk, StdDayTk, nStdLayers, StdDayTgradk, StdDayPRk, StdDayDRk);
 
+   // should test Hj & Tgradj have same number of elements
+   // should impose Tgradk[last] = 0.0 to safe extrapolation above last layer
    Hk = Hj;
    Tgradk = Tgradj;
 
