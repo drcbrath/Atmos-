@@ -1,1 +1,1 @@
-..\..\x64\Debug\testAtmos.exe
+..\..\x64\Debug\testAtmos.exe > test.out

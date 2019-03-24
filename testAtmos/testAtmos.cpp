@@ -8,21 +8,21 @@
 #include <vector>
 #include "Atmos.h"
 
-int writeTestLine(double Hgm, double Hgp, double Hpa, double Hda, double T, double rho, double P, double sonic, double theta, double sigma, double delta, double sonicratio, double visc)
+int writeTestLine(double Hgm, double Hgp, double Hpa, double Hda, double T, double rho, double P, double sonic, double visc, double theta, double sigma, double delta, double sonicratio)
 {
-   std::cout << std::fixed << std::setw(7) << std::setprecision(1) << Hgm
-      << " " << std::fixed << std::setw(7) << std::setprecision(1) << Hgp
-      << " " << std::fixed << std::setw(7) << std::setprecision(1) << Hpa
-      << " " << std::fixed << std::setw(7) << std::setprecision(1) << Hda
-      << " " << std::fixed << std::setw(7) << std::setprecision(3) << T
-      << " " << std::scientific << std::setprecision(6) << std::setw(13) << rho
-      << " " << std::scientific << std::setprecision(6) << std::setw(13) << P
-      << " " << std::fixed << std::setw(7) << std::setprecision(2) << sonic
-      << " " << std::scientific << std::setw(13) << std::setprecision(6) << theta
-      << " " << std::scientific << std::setw(13) << std::setprecision(6) << sigma
-      << " " << std::scientific << std::setw(13) << std::setprecision(6) << delta
-      << " " << std::scientific << std::setw(13) << std::setprecision(6) << sonicratio
-      << " " << std::scientific << std::setw(13) << std::setprecision(6) << visc
+   std::cout << std::fixed << std::setw(8) << std::setprecision(1) << Hgm
+      << " " << std::fixed << std::setw(8) << std::setprecision(1) << Hgp
+      << " " << std::fixed << std::setw(8) << std::setprecision(1) << Hpa
+      << " " << std::fixed << std::setw(8) << std::setprecision(1) << Hda
+      << " " << std::scientific << std::setw(10) << std::setprecision(4) << T
+      << " " << std::scientific << std::setw(10) << std::setprecision(4) << rho
+      << " " << std::scientific << std::setw(10) << std::setprecision(4) << P
+      << " " << std::scientific << std::setw(10) << std::setprecision(4) << sonic
+      << " " << std::scientific << std::setw(10) << std::setprecision(4) << visc
+      << " " << std::scientific << std::setw(10) << std::setprecision(4) << theta
+      << " " << std::scientific << std::setw(10) << std::setprecision(4) << sigma
+      << " " << std::scientific << std::setw(10) << std::setprecision(4) << delta
+      << " " << std::scientific << std::setw(10) << std::setprecision(4) << sonicratio
       << std::endl;
 
    return(0);
@@ -30,22 +30,24 @@ int writeTestLine(double Hgm, double Hgp, double Hpa, double Hda, double T, doub
 
 void writeTestTable(Atmos atmos, std::vector<double> Hgp_in)
 {
-   std::cout << "    Hgm     Hgp     Hpa     Hda       T           rho             P       a         theta         sigma         delta         kappa          visc" << std::endl;
-   std::cout << "    (m)     (m)     (m)     (m)     (K)      (kg/m^3)       (N/m^2)   (m/s)           (1)           (1)           (1)           (1)     (N*s/m^2)" << std::endl;
+   std::cout << "     Hgm      Hgp      Hpa      Hda          T        rho          P          a       visc      theta      sigma      delta        kappa" << std::endl;
+   std::cout << "     (m)      (m)      (m)      (m)        (K)   (kg/m^3)    (N/m^2)      (m/s)  (N*s/m^2)        (1)        (1)        (1)          (1)" << std::endl;
 
    for (size_t i = 0; i < Hgp_in.size(); i++)
    {
       atmos.atHgp(Hgp_in[i]);   // compute all properties, including alternate altitude definitions, at test point
-      writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa(), atmos.visc());
+      writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.visc(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa());
    }
 }
 
 void test_atH(Atmos atmos, double hgp_in)
 {
-   atmos.atHgp(hgp_in);  writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa(), atmos.visc());
-   atmos.atHgm(atmos.Hgm());  writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa(), atmos.visc());
-   atmos.atHpa(atmos.Hpa());  writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa(), atmos.visc());
-   atmos.atHda(atmos.Hda());  writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa(), atmos.visc());
+   std::cout << "            Hgm      Hgp      Hpa      Hda          T        rho          P          a       visc      theta      sigma      delta        kappa" << std::endl;
+   std::cout << "            (m)      (m)      (m)      (m)        (K)   (kg/m^3)    (N/m^2)      (m/s)  (N*s/m^2)        (1)        (1)        (1)          (1)" << std::endl;
+   atmos.atHgp(hgp_in); std::cout << "atHgp: "; writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.visc(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa());
+   atmos.atHgm(atmos.Hgm()); std::cout << "atHgm: ";  writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.visc(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa());
+   atmos.atHpa(atmos.Hpa()); std::cout << "atHpa: ";  writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.visc(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa());
+   atmos.atHda(atmos.Hda()); std::cout << "atHda: ";  writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.visc(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa());
 }
 
 int main()
@@ -64,11 +66,11 @@ int main()
    double dT = 30.0;
 
    // test profiles
-   std::vector<double> Hj = { 0.0,  8250.0, 11000.0, 17750.0, 20000.0, 29000.0, 32000.0, 43250.0, 47000.0, 50000.0, 51000.0, 66000.0, 71000.0, 81389.0, 84852.0 };
-   std::vector<double> Tj = { 288.15,234.53,216.65,216.65,216.65,225.65,228.65,260.15,270.65,270.65,270.65,228.65,214.65,193.88,186.95 };
-   std::vector<double> T30j = { 318.15,234.53,216.65,216.65,216.65,225.65,228.65,260.15,270.65,270.65,270.65,228.65,214.65,193.88,186.95 };
+   std::vector<double> Hj = { 0.0,  2750.0, 11000.0, 13250.0, 20000.0, 23000.0, 32000.0, 35750.0, 47000.0, 48000.0, 51000.0, 56000.0, 71000.0, 74463.0, 84852.0 };
+   std::vector<double> Tj = { 288.15,270.27,216.65,216.65,216.65,219.65,228.65,239.15,270.65,270.65,270.65,256.65,214.65,207.72,186.95 };
+   std::vector<double> T30j = { 318.15,270.27,216.65,216.65,216.65,219.65,228.65,239.15,270.65,270.65,270.65,256.65,214.65,207.72,186.95 };
    std::vector<double> Tgradj = { -0.0065,-0.0065, 0.0000, 0.0000, 0.0010, 0.0010, 0.0028, 0.0028, 0.0000, 0.0000,-0.0028,-0.0028,-0.0020,-0.0020, 0.0 };
-
+ 
    // test results
    std::vector<double> Hgp_out(Hgp_in.size());
    std::vector<double> Hgm_out(Hgp_in.size());
@@ -76,88 +78,101 @@ int main()
    std::vector<double> Hda_out(Hgp_in.size());
    std::vector<double> T_out(Hgp_in.size());
 
-   std::cout << std::endl << "Atmosphere Properties Model Test" << std::endl << std::endl;
+   //point tests --- for debugging
+   //// troposphere
+   //test_atH(Atmos1, 5500.0);
+   //// stratosphere
+   //test_atH(Atmos1, 15500.0);
 
-    // SI
-   // (1) standard atmosphere, test omitting AtmPrms, should generate std day object and results
-   std::cout << std::endl << "(1) standard day" << std::endl;
+   //---------------------------------------------------------------------------------------------------------------------------------------------------------
+   std::cout << std::endl << "Atmos++ Test Data-- - Atmosphere Model Properties validated against \"US Standard Atmosphere, 1976\"" << std::endl;
+
+   // SI
+   // (B.1) Atmos(), standard atmosphere, test omitting AtmPrms, should generate std day object and results
 
    Atmos Atmos1(AtmosParameters_si);   // standard atmosphere, SI units
-
-   // test operator(), at(), atHgp() --- should give same results
-   Atmos1(5500.0); std::cout << "Atmos1() --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
-   Atmos1.at(5500.0); std::cout << "Atmos1.at --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
-   Atmos1.atHgp(5500.0); std::cout << "Atmos1.atHgp --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
-
-   //point tests
-   // troposphere
-   test_atH(Atmos1, 5500.0);
-   // stratosphere
-   test_atH(Atmos1, 15500.0);
-
-   // full range test
+   std::cout << std::endl;
+   std::cout << std::endl << "(B.1) Atmos()-- - standard atmosphere; compare to 1976 US Standard Atmosphere, authoritative reference work" << std::endl;
+ 
    writeTestTable(Atmos1, Hgp_in);
 
-   // (2) dT offset, use dT from case (3) of test data, should match results of test data
-   std::cout << std::endl << "(2) dT offset" << std::endl;
+   // (B.2) Atmos(dT), dT offset
 
    Atmos Atmos2(dT, AtmosParameters_si);   // standard + dT deviation added to temperature profile vs altitude
-   
-   //point tests
-   // troposphere
-   test_atH(Atmos2, 5500.0);
-   // stratosphere
-   test_atH(Atmos2, 15500.0);
 
-   // full range test
+   // for comparison to hand calc in linear thermal layer
+   double H_B2a_L = 11000.0;
+   Atmos2.at(H_B2a_L);
+   double T_B2a_L = Atmos2.T();
+   double P_B2a_L = Atmos2.P();
+
+   // for comparison to had clac in isothermal layer
+   double H_B2a_I = 15500.0;
+   Atmos2.at(H_B2a_I);
+   double T_B2a_I = Atmos2.T();
+   double P_B2a_I = Atmos2.P();
+
+   std::cout << std::endl;
+   std::cout << "(B.2) Atmos(dT) --- standard + dT deviation added to temperature profile vs altitude" << std::endl;
+   std::cout << std::endl;
+   std::cout << "(B.2a) Comparison to hand calculations, one in linear layer, one in isothermal layer" << std::endl;
+   std::cout << "Hand calculations followed equations and constants from \"US Standard Atmosphere, 1976\"" << std::endl;
+      std::cout << "deviating only by application of temperature offset dT to temperature profile" << std::endl;
+   std::cout << "" << std::endl;
+   std::cout << "H, T, P only, since other results follow from these, as is verified in (B.1) above" << std::endl;
+   std::cout << "       H          T          P" << std::endl;
+   std::cout << "     (m)        (K)    (N/m^2)" << std::endl;
+   std::cout << H_B2a_L << " " << T_B2a_L << " " << P_B2a_L << " --- linear layer with dT=  30" << std::endl;
+   std::cout << H_B2a_I << " "<< T_B2a_I << " " << P_B2a_I << " -- - isothermal layer with dT = 30" << std::endl;
+      std::cout << std::endl;
+   std::cout << "(B.2b) Comparison of: dT offset, std+(" << dT << ") day, evaluated at test altitudes" << std::endl;
+   std::cout << "Compare at H=" << H_B2a_L << " & " << H_B2a_I << " m, T & P should be as above in (B.2a) \"hand calsc\". Rest of table results from logic tested in (B.1) above" << std::endl;
+   std::cout << "   15500.0 2.4665e+02 1.4256e+04 -- - isothermal layer with dT = 30" << std::endl;
+
+   std::cout << "(B.2b) dT offset, std+(30.000000) day, evaluated at test altitudes" << std::endl;
+   std::cout << "Compare at H=11000 & 15500 m, T & P should be as above in (B.2a) \"hand calcs\"." << std::endl;
    writeTestTable(Atmos2, Hgp_in);
 
-   // (3) use standard lapse rates and SI units from AtmosParameters_si with an initial condition selected to match an output from (2), though not at an existing breakpoint (for generality). Since the intial condition does not change the temperature profile, the results should match those obtained from test (2) above.
-   std::cout << std::endl << "(3) custom intial conditions Hic, Tic, Pic; test with dT offset and standard lapse rates, should match results of test (2) above" << std::endl;
+   // (B.3) use standard lapse rates and SI units with an initial condition selected to match an output from (B.2b), though not at an existing breakpoint (for generality). Since the intial condition does not change the temperature profile, the results should match those obtained from test (B.2b) above.
+   std::cout << std::endl;
+   std::cout << "(B.3) Standard lapse rates used to construct profile through given initial conditions." << std::endl;
+   std::cout << "      Chosen to create profile equivalent to dT offset case in (B.2b) above for comparison." << std::endl;
 
    // get intial condition point, say at 500 m
-   Atmos2.atHgp(500);
+   Atmos2.atHgp(1000);
 
    Hic = Atmos2.Hgp();
    Tic = Atmos2.T();
    Pic = Atmos2.P();
 
-   Atmos Atmos3(Hic, Tic, Pic, AtmosParameters_si);   // standard lapse rates used to construct profiles through initial condition point
+   Atmos Atmos3(Hic, Tic, Pic);   // standard lapse rates used to construct profiles through initial condition point
 
-   //point tests
-   // troposphere
-   test_atH(Atmos3, 5500.0);
-   // stratosphere
-   test_atH(Atmos3, 15500.0);
-
-   // full range test
    writeTestTable(Atmos3, Hgp_in);
 
-//   // (4) custom initial conditions for H & P and custom temperature profile (T initial condition is then interpolated from custom profile)
-//   // construct a custom profile that is equivalent in layer extents and lapse rates to one from above, though not at the same breakpoints, then the results must match.
-   std::cout << std::endl << "(4) custom intial conditions, altitude and temperature profile; input chosen such that results should match standard day test (1) above" << std::endl;
+   // (B.4) custom initial conditions for H & P and custom temperature profile (T initial condition is then interpolated from custom profile)
+   // construct a custom profile that is equivalent in layer extents and lapse rates to one from above, though not at the same breakpoints, then the results must match.
+   std::cout << std::endl;
+   std::cout << "(B.4) Atmos(Hic,Pic, Hj,Tj)" << std::endl;
+   std::cout << "      Custom temperature profile constructed with given initial condition Hic, Pic with Tic interpolated from input (Hj,Tj)." << std::endl;
+   std::cout << "      Initial conditions and temperature profile chosen to produce a profile equivalent to (B.2b) for comparison." << std::endl;
 
-   Atmos1.atHgp(500);
+   Atmos2.atHgp(1000);
 
-   Hic = Atmos1.Hgp();
-   Pic = Atmos1.P();
+   Hic = Atmos2.Hgp();
+   Pic = Atmos2.P();
 
-   Atmos Atmos4(Hic, Pic, Hj, Tj, AtmosParameters_si);
+   Atmos Atmos4(Hic, Pic, Hj, T30j, AtmosParameters_si);
 
-   //point tests
-   // troposphere
-   test_atH(Atmos4, 5500.0);
-   // stratosphere
-   test_atH(Atmos4, 15500.0);
-
-   // full range test
    writeTestTable(Atmos4, Hgp_in);
 
-   // (5) fully custom, initial conditions and temperature gradient (lapse rates). How to test? (1) construct conditions and profile equivalent to case (4); then results must match. Plus, to test that the custom input really do alter the results and the match in (1) is not some kind of bug, create another and different custom profile and conditions to show that the results do change with input.
-   std::cout << std::endl << "(5) fully custom, intial conditions, altitude breakpoints, and lapse rates; input chosen such that results should match dT offset results of test (2) above" << std::endl;
+   // (B.5) fully custom, initial conditions and temperature gradient (lapse rates). How to test? (1) construct conditions and profile equivalent to case (4); then results must match. Plus, to test that the custom input really do alter the results and the match in (1) is not some kind of bug, create another and different custom profile and conditions to show that the results do change with input.
+   std::cout << std::endl;
+   std::cout << "(B.5) Atmos(Hic,Tic,Pic, Hj, Tgradj)" << std::endl;
+   std::cout << "      custom temperature gradient profile (i.e. lapse rates) and initial conditions" << std::endl;
+   std::cout << "      setup to produce profile equivalent to that of (B.2b) for comparison" << std::endl;
 
    // get intial condition point, say at 500 m
-   Atmos2.atHgp(500);
+   Atmos2.atHgp(1000);
 
    Hic = Atmos2.Hgp();
    Tic = Atmos2.T();
@@ -165,13 +180,41 @@ int main()
 
    Atmos Atmos5(Hic, Tic, Pic, Hj, Tgradj, AtmosParameters_si);
 
-   //point tests
-   // troposphere
-   test_atH(Atmos5,  5500.0);
-   // stratosphere
-   test_atH(Atmos5, 15500.0);
-
-   // full range test
    writeTestTable(Atmos5, Hgp_in);
 
+   // (C) ------------ Method Function Tests ---------------
+   // check computation and access to results through all the method functions
+
+   // use standard atmosphere for comparison to authoritative reference
+   
+   // since values over full domain have been checked above in (B.1), it suffices here to check at only one altitude
+   double Hgp = 5500;
+
+   // (C.1), (C.2), (C.3), evaluate atmosphere properties at given Hgp, these should produce the same results
+      // test operator(), at(), atHgp() --- should give same results
+   std::cout << std::endl << "Test Method Functions" << std::endl;
+   Atmos1(Hgp); std::cout << "(C.1) Atmos1() --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.at(Hgp); std::cout << "(C.2) Atmos1.at --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+   Atmos1.atHgp(Hgp); std::cout << "(C.3) Atmos1.atHgp --- Hgp, P, rho:" << Atmos1.Hgp() << " " << Atmos1.P() << " " << Atmos1.rho() << std::endl;
+
+   std::cout << "(C.4) Atmos1.Hgm(): " << Atmos1.Hgm() << std::endl;
+   std::cout << "(C.5) Atmos1.Hpa(): " << Atmos1.Hpa() << std::endl;
+   std::cout << "(C.6) Atmos1.Hda(): " << Atmos1.Hda() << std::endl;
+   std::cout << "(C.7) Atmos1.T(): " << Atmos1.T() << std::endl;
+   std::cout << "(C.8) Atmos1.rho(): " << Atmos1.rho() << std::endl;
+   std::cout << "(C.9) Atmos1.P(): " << Atmos1.P() << std::endl;
+   std::cout << "(C.10) Atmos1.a(): " << Atmos1.a() << std::endl;
+   std::cout << "(C.11) Atmos1.visc(): " << Atmos1.visc() << std::endl;
+   std::cout << "(C.12) Atmos1.theta(): " << Atmos1.theta() << std::endl;
+   std::cout << "(C.13) Atmos1.sigma(): " << Atmos1.sigma() << std::endl;
+   std::cout << "(C.14) Atmos1.delta(): " << Atmos1.delta() << std::endl;
+   std::cout << "(C.15) Atmos1.kappa(): " << Atmos1.kappa() << std::endl;
+
+   // test computation of altitude types and method functions atHgm, atHpa, atHda
+   // start with given Hgp, the object should compute the other types, using these successively should generate then same results
+   // use object with dT offset so that Hpa and Hda will differ from Hgp (they are the same in std atmosphere due to their definition)
+   std::cout << std::endl << "(C.16), (C.17), (C.18), (C.19) evaluate at altitude of each type, using atmos with dT = " << dT << std::endl;
+   std::cout << "with non-zero dT, altitudes Hpa and Hda differ from standard atmosphere Hgp." << std::endl;
+   std::wcout << "types computed and evaluated successively (Hgp, Hgm, Hpa, Hda) such that four lines of results should be the same" << std::endl;
+   test_atH(Atmos2, Hgp);
 }
