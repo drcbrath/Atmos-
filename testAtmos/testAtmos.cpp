@@ -42,8 +42,8 @@ void writeTestTable(Atmos atmos, std::vector<double> Hgp_in)
 
 void test_atH(Atmos atmos, double hgp_in)
 {
-   std::cout << "            Hgm      Hgp      Hpa      Hda          T        rho          P          a       visc      theta      sigma      delta        kappa" << std::endl;
-   std::cout << "            (m)      (m)      (m)      (m)        (K)   (kg/m^3)    (N/m^2)      (m/s)  (N*s/m^2)        (1)        (1)        (1)          (1)" << std::endl;
+   std::cout << "            Hgm      Hgp      Hpa      Hda          T        rho          P          a       visc      theta      sigma      delta      kappa" << std::endl;
+   std::cout << "            (m)      (m)      (m)      (m)        (K)   (kg/m^3)    (N/m^2)      (m/s)  (N*s/m^2)        (1)        (1)        (1)        (1)" << std::endl;
    atmos.atHgp(hgp_in); std::cout << "atHgp: "; writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.visc(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa());
    atmos.atHgm(atmos.Hgm()); std::cout << "atHgm: ";  writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.visc(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa());
    atmos.atHpa(atmos.Hpa()); std::cout << "atHpa: ";  writeTestLine(atmos.Hgm(), atmos.Hgp(), atmos.Hpa(), atmos.Hda(), atmos.T(), atmos.rho(), atmos.P(), atmos.a(), atmos.visc(), atmos.theta(), atmos.sigma(), atmos.delta(), atmos.kappa());
@@ -68,7 +68,7 @@ int main()
    // test profiles
    std::vector<double> Hj = { 0.0,  2750.0, 11000.0, 13250.0, 20000.0, 23000.0, 32000.0, 35750.0, 47000.0, 48000.0, 51000.0, 56000.0, 71000.0, 74463.0, 84852.0 };
    std::vector<double> Tj = { 288.15,270.27,216.65,216.65,216.65,219.65,228.65,239.15,270.65,270.65,270.65,256.65,214.65,207.72,186.95 };
-   std::vector<double> T30j = { 318.15,270.27,216.65,216.65,216.65,219.65,228.65,239.15,270.65,270.65,270.65,256.65,214.65,207.72,186.95 };
+   std::vector<double> T30j = { 318.15,300.27,246.65,246.65,246.65,249.65,258.65,269.15,300.65,300.65,300.65,286.65,244.65,237.72,216.95 };
    std::vector<double> Tgradj = { -0.0065,-0.0065, 0.0000, 0.0000, 0.0010, 0.0010, 0.0028, 0.0028, 0.0000, 0.0000,-0.0028,-0.0028,-0.0020,-0.0020, 0.0 };
  
    // test results
@@ -85,14 +85,14 @@ int main()
    //test_atH(Atmos1, 15500.0);
 
    //---------------------------------------------------------------------------------------------------------------------------------------------------------
-   std::cout << std::endl << "Atmos++ Test Data-- - Atmosphere Model Properties validated against \"US Standard Atmosphere, 1976\"" << std::endl;
+   std::cout << "Atmos++ Test Data --- Atmosphere Model Properties validated against \"US Standard Atmosphere, 1976\"" << std::endl;
 
    // SI
    // (B.1) Atmos(), standard atmosphere, test omitting AtmPrms, should generate std day object and results
 
    Atmos Atmos1(AtmosParameters_si);   // standard atmosphere, SI units
-   std::cout << std::endl;
-   std::cout << std::endl << "(B.1) Atmos()-- - standard atmosphere; compare to 1976 US Standard Atmosphere, authoritative reference work" << std::endl;
+
+   std::cout << std::endl << "(B.1) Atmos()--- standard atmosphere; compare to 1976 US Standard Atmosphere, authoritative reference work" << std::endl;
  
    writeTestTable(Atmos1, Hgp_in);
 
@@ -122,20 +122,17 @@ int main()
    std::cout << "H, T, P only, since other results follow from these, as is verified in (B.1) above" << std::endl;
    std::cout << "       H          T          P" << std::endl;
    std::cout << "     (m)        (K)    (N/m^2)" << std::endl;
-   std::cout << H_B2a_L << " " << T_B2a_L << " " << P_B2a_L << " --- linear layer with dT=  30" << std::endl;
-   std::cout << H_B2a_I << " "<< T_B2a_I << " " << P_B2a_I << " -- - isothermal layer with dT = 30" << std::endl;
+   std::cout << H_B2a_L << " " << T_B2a_L << " " << P_B2a_L << " --- linear layer with dT = " << dT << std::endl;
+   std::cout << H_B2a_I << " "<< T_B2a_I << " " << P_B2a_I << " --- isothermal layer with dT = " << dT << std::endl;
       std::cout << std::endl;
-   std::cout << "(B.2b) Comparison of: dT offset, std+(" << dT << ") day, evaluated at test altitudes" << std::endl;
-   std::cout << "Compare at H=" << H_B2a_L << " & " << H_B2a_I << " m, T & P should be as above in (B.2a) \"hand calsc\". Rest of table results from logic tested in (B.1) above" << std::endl;
-   std::cout << "   15500.0 2.4665e+02 1.4256e+04 -- - isothermal layer with dT = 30" << std::endl;
 
-   std::cout << "(B.2b) dT offset, std+(30.000000) day, evaluated at test altitudes" << std::endl;
+   std::cout << "(B.2b) Atmos(dT), dT offset, std+(" << dT << ") day, evaluated at test altitudes" << std::endl;
    std::cout << "Compare at H=11000 & 15500 m, T & P should be as above in (B.2a) \"hand calcs\"." << std::endl;
    writeTestTable(Atmos2, Hgp_in);
 
    // (B.3) use standard lapse rates and SI units with an initial condition selected to match an output from (B.2b), though not at an existing breakpoint (for generality). Since the intial condition does not change the temperature profile, the results should match those obtained from test (B.2b) above.
    std::cout << std::endl;
-   std::cout << "(B.3) Standard lapse rates used to construct profile through given initial conditions." << std::endl;
+   std::cout << "(B.3) Atmos(Hic, Tic, Pic), standard lapse rates used to construct profile through given initial conditions." << std::endl;
    std::cout << "      Chosen to create profile equivalent to dT offset case in (B.2b) above for comparison." << std::endl;
 
    // get intial condition point, say at 500 m
