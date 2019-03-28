@@ -34,22 +34,24 @@ const double a0_si = 340.2686;                   // (m/s) speed of sound at SL s
 const double visc0_si = 1.789380278077583e-05;   // (N/m^2) air dynamic viscosity at SL std
 const double S_si = 110.4;                       // (K) air Sutherland temperature for viscosity computation
 
-// defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
+// defined atmosphere profiles
 const std::vector<double> StdDayHk_si({ 0.0,  11000.0,  20000.0,  32000.0,  47000.0,  51000.0,  71000.0,  84852.0 });
 const std::vector<double> StdDayTk_si({ 288.15,   216.65,   216.65,   228.65,   270.65,   270.65,   214.65,   186.95 });
 const std::vector<double> StdDayTgradk_si({ -0.0065, 0.0000, 0.0010, 0.0028, 0.0000, -0.0028, -0.0019997, 0.0 });
 
-const std::vector<double> HotDayHk_si({ 0.0, 11000., 20000. });
-const std::vector<double> HotDayTk_si({ 308.15,269.65,237.65 });
-
-const std::vector<double> ColdDayHk_si({ 0.0, 11000., 20000. });
-const std::vector<double> ColdDayTk_si({ 308.15,269.65,237.65 });
-
-const std::vector<double> TropicalDayHk_si({ 0.0, 11000., 20000. });
-const std::vector<double> TropicalDayTk_si({ 308.15,269.65,237.65 });
-
-const std::vector<double> PolarDayHk_si({ 0.0, 11000., 20000. });
-const std::vector<double> PolarDayTk_si({ 308.15,269.65,237.65 });
+// need to revise alternate day profiles per an authoritative reference;none found yet.
+// Despite internet claims, neither Mil-Std-210 nor Mil-Hdbk-310 define these alternate day atmosphere profiles.
+//const std::vector<double> HotDayHk_si({  });
+//const std::vector<double> HotDayTk_si({  });
+//
+//const std::vector<double> ColdDayHk_si({  });
+//const std::vector<double> ColdDayTk_si({  });
+//
+//const std::vector<double> TropicalDayHk_si({  });
+//const std::vector<double> TropicalDayTk_si({  });
+//
+//const std::vector<double> PolarDayHk_si({  });
+//const std::vector<double> PolarDayTk_si({  });
 
 const AtmosParameters AtmosParameters_si = { Re_si, GMR_si, H0_si, T0_si, rho0_si, P0_si, a0_si, visc0_si, S_si, StdDayHk_si, StdDayTk_si };
 
