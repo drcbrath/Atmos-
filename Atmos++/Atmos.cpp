@@ -34,24 +34,10 @@ const double a0_si = 340.2686;                   // (m/s) speed of sound at SL s
 const double visc0_si = 1.789380278077583e-05;   // (N/m^2) air dynamic viscosity at SL std
 const double S_si = 110.4;                       // (K) air Sutherland temperature for viscosity computation
 
-// defined atmosphere profiles
+// defined atmosphere profile
 const std::vector<double> StdDayHk_si({ 0.0,  11000.0,  20000.0,  32000.0,  47000.0,  51000.0,  71000.0,  84852.0 });
 const std::vector<double> StdDayTk_si({ 288.15,   216.65,   216.65,   228.65,   270.65,   270.65,   214.65,   186.95 });
 const std::vector<double> StdDayTgradk_si({ -0.0065, 0.0000, 0.0010, 0.0028, 0.0000, -0.0028, -0.0019997, 0.0 });
-
-// need to revise alternate day profiles per an authoritative reference;none found yet.
-// Despite internet claims, neither Mil-Std-210 nor Mil-Hdbk-310 define these alternate day atmosphere profiles.
-//const std::vector<double> HotDayHk_si({  });
-//const std::vector<double> HotDayTk_si({  });
-//
-//const std::vector<double> ColdDayHk_si({  });
-//const std::vector<double> ColdDayTk_si({  });
-//
-//const std::vector<double> TropicalDayHk_si({  });
-//const std::vector<double> TropicalDayTk_si({  });
-//
-//const std::vector<double> PolarDayHk_si({  });
-//const std::vector<double> PolarDayTk_si({  });
 
 const AtmosParameters AtmosParameters_si = { Re_si, GMR_si, H0_si, T0_si, rho0_si, P0_si, a0_si, visc0_si, S_si, StdDayHk_si, StdDayTk_si };
 
@@ -66,37 +52,17 @@ const double a0_us = a0_si / 0.3048;                                   // (ft/s)
 const double visc0_us = visc0_si * (0.3048*0.3048/4.4482216152605);    // (N/m^2) air dynamic viscosity at SL std
 const double S_us = S_si*1.8;                                          // (R) air Sutherland temperature for viscosity computation
 
-   // defined atmosphere profiles <need to revise alternate day profiles! base on ref Mil 3013? references !>
-const std::vector<double> StdDayHk_us({ 0.000, 3352.800, 6096.000, 9753.600, 14325.600, 15544.800, 21640.800, 25862.890 });
-const std::vector<double> StdDayTk_us({ 518.670, 389.970, 389.970, 411.570, 487.170, 487.170, 386.370, 336.510 });
-const std::vector<double> StdDayTgradk_us({ 0 });   // definitely wrong
-
-const std::vector<double> HotDayHk_us({ 0.000, 3352.800, 6096.000 });
-const std::vector<double> HotDayTk_us({ 554.670, 485.370, 427.770 });
-
-const std::vector<double> ColdDayHk_us({ 0.000, 3352.800, 6096.000 });
-const std::vector<double> ColdDayTk_us({ 554.670, 485.370, 427.770 });
-
-const std::vector<double> TropicalDayHk_us({ 0.000, 3352.800, 6096.000 });
-const std::vector<double> TropicalDayTk_us({ 554.670, 485.370, 427.770 });
-
-const std::vector<double> PolarDayHk_us({ 0.000, 3352.800, 6096.000 });
-const std::vector<double> PolarDayTk_us({ 554.670, 485.370, 427.770 });
+// defined atmosphere profile
+const std::vector<double> StdDayHk_us({ 0.0, 36089.2, 65616.8, 104986.9, 154199.5, 167322.8, 232939.6, 278385.8 });
+const std::vector<double> StdDayTk_us({ 518.67, 389.97, 389.97, 411.57, 487.17, 487.17, 386.37, 336.51 });
+const std::vector<double> StdDayTgradk_us({ -0.00356616, 0.00000000, 0.00054864, 0.00153619, 0.00000000, -0.00153619, -0.00109712, -0.00109712 });   // definitely wrong
 
 const AtmosParameters AtmosParameters_us = { Re_us, GMR_us, H0_us, T0_us, rho0_us, P0_us, a0_us, visc0_us, S_us, StdDayHk_us, StdDayTk_us };
 
 // defined atmosphere models
 Atmos StdDay_si(AtmosParameters_si);
-Atmos HotDay_si(H0_si, P0_si, HotDayHk_si, HotDayTk_si, AtmosParameters_si);
-Atmos ColdDay_si(H0_si, P0_si, ColdDayHk_si, ColdDayTk_si, AtmosParameters_si);
-Atmos TropicalDay_si(H0_si, P0_si, TropicalDayHk_si, TropicalDayTk_si, AtmosParameters_si);
-Atmos PolarDay_si(H0_si, P0_si, PolarDayHk_si, PolarDayTk_si, AtmosParameters_si);
 
 Atmos StdDay_us(AtmosParameters_us);
-Atmos HotDay_us(H0_us, P0_us, HotDayHk_us, HotDayTk_us, AtmosParameters_us);
-Atmos ColdDay_us(H0_us, P0_us, ColdDayHk_us, ColdDayTk_us, AtmosParameters_us);
-Atmos TropicalDay_us(H0_us, P0_us, TropicalDayHk_us, TropicalDayTk_us, AtmosParameters_us);
-Atmos PolarDay_us(H0_us, P0_us, PolarDayHk_us, PolarDayTk_us, AtmosParameters_us);
 
 //------- helper functions -------
 
@@ -203,7 +169,7 @@ inline void initializeProfile(double T0, double GMR, std::vector<double> Hk, std
    for (int k = 0; k < nLayers; k++)
    {
       Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
-      if( Tgradk[k] < 10 * eps)
+      if( abs(Tgradk[k]) < 10 * eps)
          Tgradk[k] = 0.0;
    }
    Tgradk[nLayers] = 0.0;
@@ -471,7 +437,7 @@ Atmos::Atmos(double Hic, double Pic, std::vector<double> Hj, std::vector<double>
    for (int k = 0; k < nLayers; k++)
    {
       Tgradk[k] = (Tk[k + 1] - Tk[k]) / (Hk[k + 1] - Hk[k]);
-      if (Tgradk[k] < 10 * eps)
+      if ( abs(Tgradk[k]) < 10 * eps)
          Tgradk[k] = 0.0;
    }
    Tgradk[nLayers] = 0.0;
