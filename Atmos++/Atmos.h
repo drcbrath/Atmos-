@@ -183,18 +183,8 @@ private:
 
 };
 
-
 extern const AtmosParameters AtmosParameters_us;
 
 // defined atmosphere models
 extern Atmos StdDay_si;
-extern Atmos HotDay_si;
-extern Atmos ColdDay_si;
-extern Atmos TropicalDay_si;
-extern Atmos PolarDay_si;
-
 extern Atmos StdDay_us;
-extern Atmos HotDay_us;
-extern Atmos ColdDay_us;
-extern Atmos TropicalDay_us;
-extern Atmos PolarDay_us;
